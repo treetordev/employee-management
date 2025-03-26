@@ -3,6 +3,9 @@ package com.hrms.HRMS.employee.dao;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,9 +39,11 @@ public class Employee {
 	private String jobDescription;
 	
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonBackReference
     private List<LeaveTracker> leaveHistory;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Timesheet> timesheetHistory;
 	
 	@PrePersist

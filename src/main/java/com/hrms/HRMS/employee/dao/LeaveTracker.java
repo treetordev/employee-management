@@ -2,6 +2,8 @@ package com.hrms.HRMS.employee.dao;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +22,7 @@ public class LeaveTracker {
 
     @ManyToOne
     @JoinColumn(name = "employeeId", nullable = false)
+    @JsonBackReference
     private Employee employee;
 
     private LocalDate startDate;
