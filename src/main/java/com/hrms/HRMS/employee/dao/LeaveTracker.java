@@ -25,5 +25,6 @@ public class LeaveTracker {
     private LocalDate startDate;
     private LocalDate endDate;
     private String leaveType;
-    private String status; 
+    private String status;
+    private String reason;
 }

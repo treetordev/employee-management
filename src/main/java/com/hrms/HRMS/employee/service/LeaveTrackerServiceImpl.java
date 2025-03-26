@@ -32,6 +32,7 @@ public class LeaveTrackerServiceImpl implements LeaveTrackerService {
         leaveTracker.setEndDate(leaveTrackerDto.getEndDate());
         leaveTracker.setLeaveType(leaveTrackerDto.getLeaveType());
         leaveTracker.setStatus("Pending");
+        leaveTracker.setReason(leaveTracker.getReason());
 
         return leaveTrackerRepository.save(leaveTracker);
     }

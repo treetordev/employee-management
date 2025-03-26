@@ -12,5 +12,6 @@ public class LeaveTrackerDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private int totalDays;
+    private String reason;
 }
 
