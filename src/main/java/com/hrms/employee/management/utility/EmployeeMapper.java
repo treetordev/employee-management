@@ -12,13 +12,12 @@ import java.util.Map;
 @Component
 public class EmployeeMapper {
 
-    public static GenerateTokenRequest getGenerateTokenRequest(Map<String, Object> masterRealmDetails) {
-        return GenerateTokenRequest.builder().
-                password(masterRealmDetails.getPassword()).
-                clientId(masterRealmDetails.getClientId()).
-                username(masterRealmDetails.getUsername()).
-                clientSecret(masterRealmDetails.getClientSecret()).
-                build();
+    public static GenerateTokenRequest getGenerateTokenRequest(Map<String, Object> configMap) {
+        String clientId = (String) configMap.get("clientId");
+        String clientSecret = (String) configMap.get("clientSecret");
+        String username = (String) configMap.get("username");
+        String password = (String) configMap.get("password");
+        return new GenerateTokenRequest(password, username, clientId, clientSecret);
     }
 
     public Employee toEntity(EmployeeDto dto) {
