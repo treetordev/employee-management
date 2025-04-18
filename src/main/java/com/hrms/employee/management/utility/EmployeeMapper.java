@@ -1,12 +1,25 @@
 package com.hrms.employee.management.utility;
 
+import com.hrms.employee.management.dto.GenerateTokenRequest;
 import org.springframework.stereotype.Component;
 
 import com.hrms.employee.management.dao.Employee;
 import com.hrms.employee.management.dto.EmployeeDto;
 
+
+import java.util.Map;
+
 @Component
 public class EmployeeMapper {
+
+    public static GenerateTokenRequest getGenerateTokenRequest(Map<String, Object> masterRealmDetails) {
+        return GenerateTokenRequest.builder().
+                password(masterRealmDetails.getPassword()).
+                clientId(masterRealmDetails.getClientId()).
+                username(masterRealmDetails.getUsername()).
+                clientSecret(masterRealmDetails.getClientSecret()).
+                build();
+    }
 
     public Employee toEntity(EmployeeDto dto) {
         Employee employee = new Employee();

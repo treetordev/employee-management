@@ -12,4 +12,6 @@ public interface EmployeeService {
     Employee getEmployeeById(String employeeId);
     List<Employee> getAllEmployees();
     EmployeeCountDto getEmployeeCounts();
+
+    String onboardUserInKeycloak(EmployeeDto employeeDto, String currentTenant);
 }

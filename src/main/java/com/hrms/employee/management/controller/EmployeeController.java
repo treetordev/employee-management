@@ -2,6 +2,7 @@ package com.hrms.employee.management.controller;
 
 import java.util.List;
 
+import com.hrms.employee.management.utility.TenantContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,8 +24,10 @@ public class EmployeeController {
     @PostMapping
     public ResponseEntity<Employee> createEmployee(@RequestBody EmployeeDto employeeDto) {
         Employee createdEmployee = employeeService.createEmployee(employeeDto);
+        String userId=employeeService.onboardUserInKeycloak(employeeDto, TenantContext.getCurrentTenant());
         return ResponseEntity.ok(createdEmployee);
     }
+
 
     @PutMapping("/{employeeId}")
     public ResponseEntity<Employee> updateEmployee(@PathVariable String employeeId, @RequestBody EmployeeDto employeeDto) {

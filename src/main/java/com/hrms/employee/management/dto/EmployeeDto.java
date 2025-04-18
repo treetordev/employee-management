@@ -19,4 +19,6 @@ public class EmployeeDto {
     private String jobType;
     private String jobStatus;
     private String jobDescription;
+    private String password;
+    private boolean temporaryPassword;
 }
