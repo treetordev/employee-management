@@ -9,11 +9,11 @@
 		<version>3.4.4</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.hrms</groupId>
-	<artifactId>HRMS</artifactId>
+	<groupId>com.hrms.employee.management</groupId>
+	<artifactId>employee.management</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>HRMS</name>
-	<description>HRMS Employee </description>
+	<name>employee.management</name>
+	<description>Employee management system</description>
 	<url />
 	<licenses>
 		<license />
