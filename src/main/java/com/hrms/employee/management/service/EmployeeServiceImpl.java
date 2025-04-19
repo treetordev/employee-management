@@ -81,7 +81,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         String token=getKeycloakToken(masterRealmDetails);
         log.info("token:{}",token);
         String url = iamServiceBaseUrl + Constants.ONBOARD_KEYCLOAK_USER;
-        OnboardKeycloakUserRequest userRequest = EmployeeOnboardingHelper.getOnboardKeycloakUserRequest(employeeDto);
+        OnboardKeycloakUserRequest userRequest = EmployeeOnboardingHelper.getOnboardKeycloakUserRequest(employeeDto,TenantContext.getCurrentTenant());
         HttpEntity<OnboardKeycloakUserRequest> entity = new HttpEntity<>(userRequest, createHeaders(token));
 
         ResponseEntity<Map<String, String>> response = makeApiCall(url, HttpMethod.POST, entity, new ParameterizedTypeReference<>() {
