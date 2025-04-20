@@ -9,7 +9,7 @@ import java.util.List;
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
 	
 	long countByJobStatus(String jobStatus);
-	List<Employee> findByGroupIsNull();
+	List<Employee> findByGroupIdIsNull();
 
 	List<Employee> findByGroupId(String groupId);
 }

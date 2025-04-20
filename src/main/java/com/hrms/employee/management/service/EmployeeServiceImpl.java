@@ -134,7 +134,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     public List<Employee> findUnassignedEmployees() {
-        return employeeRepository.findByGroupIsNull();
+        return employeeRepository.findByGroupIdIsNull();
     }
 
     public List<Employee> findEmployeesByGroup(String groupId) {
