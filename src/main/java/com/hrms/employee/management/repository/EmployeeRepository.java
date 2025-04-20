@@ -4,7 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.hrms.employee.management.dao.Employee;
 
+import java.util.List;
+
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
 	
 	long countByJobStatus(String jobStatus);
+	List<Employee> findByGroupIsNull();
+
+	List<Employee> findByGroupId(String groupId);
 }

@@ -53,4 +53,15 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeCounts);
     }
 
+    @GetMapping("/unassigned")
+    public ResponseEntity<List<Employee>> getUnassignedEmployees() {
+        List<Employee> unassignedEmployees = employeeService.findUnassignedEmployees();
+        return ResponseEntity.ok(unassignedEmployees);
+    }
+
+    @GetMapping("/by-group/{groupId}")
+    public ResponseEntity<List<Employee>> getEmployeesByGroup(@PathVariable String groupId) {
+        List<Employee> employees = employeeService.findEmployeesByGroup(groupId);
+        return ResponseEntity.ok(employees);
+    }
 }

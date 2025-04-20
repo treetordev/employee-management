@@ -95,6 +95,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         return responseBody.get("userId");
     }
 
+
+
     private HttpHeaders createHeaders(String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
@@ -129,6 +131,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
         Map<String, Object> responseBody = response.getBody();
         return (Map<String, Object>) responseBody.get("data");
+    }
+
+    public List<Employee> findUnassignedEmployees() {
+        return employeeRepository.findByGroupIsNull();
+    }
+
+    public List<Employee> findEmployeesByGroup(String groupId) {
+        return employeeRepository.findByGroupId(groupId);
     }
 
 }

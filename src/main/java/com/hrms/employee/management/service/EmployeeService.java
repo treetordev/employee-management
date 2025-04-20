@@ -14,4 +14,9 @@ public interface EmployeeService {
     EmployeeCountDto getEmployeeCounts();
 
     String onboardUserInKeycloak(EmployeeDto employeeDto, String currentTenant);
+
+
+    List<Employee> findUnassignedEmployees();
+
+    List<Employee> findEmployeesByGroup(String groupId);
 }
