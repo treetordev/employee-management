@@ -18,5 +18,5 @@ public interface EmployeeService {
 
     List<Employee> findUnassignedEmployees();
 
-    List<Employee> findEmployeesByGroup(String groupId);
+    List<Employee> findEmployeesByGroup(Long groupId);
 }

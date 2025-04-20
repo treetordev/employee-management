@@ -11,5 +11,5 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
 	long countByJobStatus(String jobStatus);
 	List<Employee> findByGroupIdIsNull();
 
-	List<Employee> findByGroupId(String groupId);
+	List<Employee> findByGroupId(Long groupId);
 }

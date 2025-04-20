@@ -60,7 +60,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/by-group/{groupId}")
-    public ResponseEntity<List<Employee>> getEmployeesByGroup(@PathVariable String groupId) {
+    public ResponseEntity<List<Employee>> getEmployeesByGroup(@PathVariable Long groupId) {
         List<Employee> employees = employeeService.findEmployeesByGroup(groupId);
         return ResponseEntity.ok(employees);
     }

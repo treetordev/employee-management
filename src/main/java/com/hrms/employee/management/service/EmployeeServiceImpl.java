@@ -137,7 +137,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.findByGroupIdIsNull();
     }
 
-    public List<Employee> findEmployeesByGroup(String groupId) {
+    public List<Employee> findEmployeesByGroup(Long groupId) {
         return employeeRepository.findByGroupId(groupId);
     }
 
