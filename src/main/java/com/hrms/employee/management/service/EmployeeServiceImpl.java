@@ -152,4 +152,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.save(emp);
     }
 
+    @Override
+    public void assignManagerToEmployee(String employeeId, String managerEmpId) {
+        Employee emp= employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        if(emp.getAssignedManagerId()!=null){
+            throw new RuntimeException("Manager already present");
+        }
+        emp.setAssignedManagerId(managerEmpId);
+        employeeRepository.save(emp);
+    }
+
 }

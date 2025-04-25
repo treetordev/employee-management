@@ -21,4 +21,6 @@ public interface EmployeeService {
     List<Employee> findEmployeesByGroup(Long groupId);
 
     void assignGroupToEmployee(String employeeId, Long groupId);
+
+    void assignManagerToEmployee(String employeeId, String managerEmpId);
 }
