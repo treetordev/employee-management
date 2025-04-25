@@ -64,4 +64,12 @@ public class EmployeeController {
         List<Employee> employees = employeeService.findEmployeesByGroup(groupId);
         return ResponseEntity.ok(employees);
     }
+    @PatchMapping("/{employeeId}/assign-group/{groupId}")
+    public ResponseEntity<?> assignGroupToEmployee(
+            @PathVariable String employeeId,
+            @PathVariable Long groupId) {
+
+        employeeService.assignGroupToEmployee(employeeId, groupId);
+        return ResponseEntity.ok("group assigned successfully to employee");
+    }
 }

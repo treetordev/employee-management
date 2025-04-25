@@ -141,4 +141,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.findByGroupId(groupId);
     }
 
+    @Override
+    public void assignGroupToEmployee(String employeeId, Long groupId) {
+        Employee emp= employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        if(emp.getGroupId()!=null){
+            throw new RuntimeException("Group already present");
+        }
+        emp.setGroupId(groupId);
+        employeeRepository.save(emp);
+    }
+
 }

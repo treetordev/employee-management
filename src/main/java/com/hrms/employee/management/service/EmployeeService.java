@@ -19,4 +19,6 @@ public interface EmployeeService {
     List<Employee> findUnassignedEmployees();
 
     List<Employee> findEmployeesByGroup(Long groupId);
+
+    void assignGroupToEmployee(String employeeId, Long groupId);
 }
