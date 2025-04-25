@@ -38,6 +38,7 @@ public class Employee {
 	private String jobStatus;
 	private String jobDescription;
 	private Long groupId;
+	private String kcReferenceId;
 	
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonBackReference

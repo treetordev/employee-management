@@ -21,4 +21,5 @@ public class EmployeeDto {
     private String jobDescription;
     private String password;
     private boolean temporaryPassword;
+    private String kcReferenceId;
 }

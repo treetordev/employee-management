@@ -23,8 +23,9 @@ public class EmployeeController {
 
     @PostMapping
     public ResponseEntity<Employee> createEmployee(@RequestBody EmployeeDto employeeDto) {
-        Employee createdEmployee = employeeService.createEmployee(employeeDto);
         String userId=employeeService.onboardUserInKeycloak(employeeDto, TenantContext.getCurrentTenant());
+        employeeDto.setKcReferenceId(userId);
+        Employee createdEmployee = employeeService.createEmployee(employeeDto);
         return ResponseEntity.ok(createdEmployee);
     }
 
@@ -68,7 +69,6 @@ public class EmployeeController {
     public ResponseEntity<?> assignGroupToEmployee(
             @PathVariable String employeeId,
             @PathVariable Long groupId) {
-
         employeeService.assignGroupToEmployee(employeeId, groupId);
         return ResponseEntity.ok("group assigned successfully to employee");
     }
