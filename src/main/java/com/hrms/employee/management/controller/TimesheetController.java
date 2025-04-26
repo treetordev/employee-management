@@ -30,5 +30,12 @@ public class TimesheetController {
     public ResponseEntity<List<TimesheetDto>> getTimesheetHistory(@PathVariable String employeeId) {
         List<TimesheetDto> timesheetHistory = timesheetService.getTimesheetByEmployeeId(employeeId);
         return ResponseEntity.ok(timesheetHistory);
+    }   
+
+    @PutMapping("/clock")
+    public ResponseEntity<TimesheetDto> clockIn(@PathVariable String employeeId, @RequestBody TimesheetDto timesheetDto) {
+        TimesheetDto result = timesheetService.clock(employeeId, timesheetDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
+    
 }

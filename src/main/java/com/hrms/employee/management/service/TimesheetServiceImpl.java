@@ -26,7 +26,7 @@ public class TimesheetServiceImpl implements TimesheetService {
     public TimesheetDto logWork(String employeeId, TimesheetDto timesheetDto) {
         // Fetch the employee
         Employee employee = employeeRepository.findById(employeeId)
-                                              .orElseThrow(() -> new RuntimeException("Employee not found"));
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
 
         // Create Timesheet entry
         Timesheet timesheet = new Timesheet();
@@ -61,5 +61,39 @@ public class TimesheetServiceImpl implements TimesheetService {
         dto.setClockOut(timesheet.getClockOut());
         dto.setTotalHours(timesheet.getTotalHours());
         return dto;
+    }
+
+    @Override
+    public TimesheetDto clock(String employeeId, TimesheetDto timesheetDto) {
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        Timesheet timesheet = timesheetRepository.findByworkDateAndEmployee_EmployeeId(
+                timesheetDto.getWorkDate(), employeeId);
+
+       
+        if (timesheet == null) {
+            timesheet= new Timesheet();
+            timesheet.setEmployee(employee);
+            timesheet.setWorkDate(timesheetDto.getWorkDate());
+            timesheet.setClockIn(timesheetDto.getClockIn());
+        }
+        else{
+            if (timesheet.getClockIn() == null) {
+                throw new RuntimeException("No clock-in record found for this date.");
+            }
+            if(timesheet.getClockOut() != null) {
+                throw new RuntimeException("Already clocked out for this date.");
+            }
+            timesheet.setClockOut(timesheetDto.getClockOut());
+            Duration duration = Duration.between(timesheet.getClockIn(), timesheetDto.getClockOut());
+            timesheet.setTotalHours(duration.toHours() + (duration.toMinutesPart() / 60.0));
+            
+        }
+
+        Timesheet savedTimesheet = timesheetRepository.save(timesheet);
+
+        return convertToDto(savedTimesheet);
     }
 }
