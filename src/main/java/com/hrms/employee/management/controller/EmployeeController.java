@@ -3,6 +3,7 @@ package com.hrms.employee.management.controller;
 import java.util.List;
 
 import com.hrms.employee.management.utility.TenantContext;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,5 +80,10 @@ public class EmployeeController {
             @PathVariable String managerEmpId) {
         employeeService.assignManagerToEmployee(employeeId, managerEmpId);
         return ResponseEntity.ok("manager assigned successfully to employee");
+    }
+    @GetMapping("/getEmployeeByKcRefId")
+    public ResponseEntity<Employee> getEmployeeByKcRefId(@RequestParam String kcRefId) {
+        Employee employee = employeeService.findEmployeesByKcRefId(kcRefId);
+        return ResponseEntity.ok(employee);
     }
 }
