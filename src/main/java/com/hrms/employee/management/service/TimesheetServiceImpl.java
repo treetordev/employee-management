@@ -1,6 +1,8 @@
 package com.hrms.employee.management.service;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,9 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hrms.employee.management.dao.Employee;
+import com.hrms.employee.management.dao.LeaveTracker;
 import com.hrms.employee.management.dao.Timesheet;
+import com.hrms.employee.management.dto.DailyTimesheetDto;
+import com.hrms.employee.management.dto.EmployeeTimeSheetDto;
+import com.hrms.employee.management.dto.LeaveTrackerDto;
+import com.hrms.employee.management.dto.MonthlyTimeSheetDto;
+import com.hrms.employee.management.dto.SummaryDto;
 import com.hrms.employee.management.dto.TimesheetDto;
 import com.hrms.employee.management.repository.EmployeeRepository;
+import com.hrms.employee.management.repository.LeaveTrackerRepository;
 import com.hrms.employee.management.repository.TimesheetRepository;
 
 @Service
@@ -21,6 +30,9 @@ public class TimesheetServiceImpl implements TimesheetService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private LeaveTrackerRepository leaveTrackerRepository;
 
     @Override
     public TimesheetDto logWork(String employeeId, TimesheetDto timesheetDto) {
@@ -72,7 +84,7 @@ public class TimesheetServiceImpl implements TimesheetService {
         Timesheet timesheet = timesheetRepository.findByworkDateAndEmployee_EmployeeId(
                 timesheetDto.getWorkDate(), employeeId);
 
-       
+
         if (timesheet == null) {
             timesheet= new Timesheet();
             timesheet.setEmployee(employee);
@@ -89,11 +101,120 @@ public class TimesheetServiceImpl implements TimesheetService {
             timesheet.setClockOut(timesheetDto.getClockOut());
             Duration duration = Duration.between(timesheet.getClockIn(), timesheetDto.getClockOut());
             timesheet.setTotalHours(duration.toHours() + (duration.toMinutesPart() / 60.0));
-            
+
         }
 
         Timesheet savedTimesheet = timesheetRepository.save(timesheet);
 
         return convertToDto(savedTimesheet);
     }
+
+    @Override
+    public List<TimesheetDto> getMonthlyTimesheet(String employeeId, int month,int year) {
+        List<Timesheet> timesheets = timesheetRepository.findByEmployeeAndMonth(employeeId, month,year);
+        if (timesheets.isEmpty()) {
+            throw new RuntimeException("No timesheet found for the given month.");
+        }
+      //  LeaveTracker leaveTracker = leaveTrackerRepository.findLeaveByDateAndEmployeeId(date, employeeId);
+    
+
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int noOfDaysInMonth = yearMonth.lengthOfMonth();
+        int timesheetCount = timesheets.size();
+
+        MonthlyTimeSheetDto monthlyTimeSheetDto = new MonthlyTimeSheetDto();
+
+        SummaryDto summaryDto = new SummaryDto();
+        summaryDto.setTotalDays(noOfDaysInMonth);
+        summaryDto.setFilledDays(timesheetCount);
+        summaryDto.setRemainingDays(noOfDaysInMonth - timesheetCount);
+        summaryDto.setPendingApprovalDays(0);
+        summaryDto.setRemainingDays(0);
+        summaryDto.setLeaveDays(0);
+
+        monthlyTimeSheetDto.setYear(timesheets.get(0).getWorkDate().getYear());
+        monthlyTimeSheetDto.setMonth(month);
+        monthlyTimeSheetDto.setEmployee(timesheets.get(0).getEmployee());
+
+        return timesheets.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public DailyTimesheetDto getDailyTimesheet(String employeeId, LocalDate date) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    
+        EmployeeTimeSheetDto employeeTimeSheetDto = new EmployeeTimeSheetDto();
+        employeeTimeSheetDto.setEmployeeId(employee.getEmployeeId());
+        employeeTimeSheetDto.setEmployeeName(employee.getName());
+        employeeTimeSheetDto.setEmployeeDepartment(employee.getJobTitle());
+        employeeTimeSheetDto.setEmployeeDesignation(employee.getRole());
+    
+        String dayOfWeek = date.getDayOfWeek().name(); 
+        LocalDate today = LocalDate.now();
+        Timesheet timesheet = timesheetRepository.findByEmployeeAndDate(employeeId, date);
+        LeaveTracker leaveTracker = leaveTrackerRepository.findLeaveByDateAndEmployeeId(date, employeeId);
+    
+        DailyTimesheetDto dailyTimesheetDto = new DailyTimesheetDto();
+        dailyTimesheetDto.setEmployee(employeeTimeSheetDto);
+        dailyTimesheetDto.setDate(date);
+        dailyTimesheetDto.setDayOfWeek(dayOfWeek);
+        dailyTimesheetDto.setEditable(false);
+        dailyTimesheetDto.setLeaveDay(false);
+        dailyTimesheetDto.setWeekend(false);
+        dailyTimesheetDto.setHoliday(false);
+        dailyTimesheetDto.setFutureDate(false);
+    
+        if (leaveTracker != null && (date.isBefore(today) || date.isEqual(today))) {
+            dailyTimesheetDto.setTimesheetStatus("Leave");
+            dailyTimesheetDto.setLeaveTracker(convertToLeaveTrackerDto(leaveTracker));
+            return dailyTimesheetDto;
+        }
+    
+        if (date.isAfter(today) && leaveTracker != null) {
+            dailyTimesheetDto.setTimesheetStatus("Future Date");
+            dailyTimesheetDto.setFutureDate(true);
+            return dailyTimesheetDto;
+        }
+    
+        if (dayOfWeek.equals("SATURDAY") || dayOfWeek.equals("SUNDAY")) {
+            dailyTimesheetDto.setTimesheetStatus("weekend");
+            dailyTimesheetDto.setWeekend(true);
+            return dailyTimesheetDto;
+        }
+    
+        if(date.isAfter(today)) {
+            dailyTimesheetDto.setMessage("Employee data not found.");
+            return dailyTimesheetDto;
+        }
+
+        if (timesheet != null) {
+            dailyTimesheetDto.setTimesheetStatus("filled");
+            dailyTimesheetDto.setTimesheet(convertToDto(timesheet));
+        } else {
+            dailyTimesheetDto.setTimesheetStatus("unfilled");
+            dailyTimesheetDto.setEditable(true);
+            dailyTimesheetDto.setMessage("Please complete your timesheet for this day.");
+        }
+       
+    
+        return dailyTimesheetDto;
+    }
+    
+    private LeaveTrackerDto convertToLeaveTrackerDto(LeaveTracker leaveTracker) {
+        LeaveTrackerDto leaveTrackerDto = new LeaveTrackerDto();
+        leaveTrackerDto.setLeaveId(leaveTracker.getId());
+        leaveTrackerDto.setStartDate(leaveTracker.getStartDate());
+        leaveTrackerDto.setEndDate(leaveTracker.getEndDate());
+        leaveTrackerDto.setLeaveType(leaveTracker.getLeaveType());
+        // leaveTrackerDto.setStatus(leaveTracker.getStatus());
+        leaveTrackerDto.setReason(leaveTracker.getReason());
+        // leaveTrackerDto.setApprovedBy(LeaveTracker.getLeaveStatus());
+        // LeaveTrackerDto.setApprovedOn(leaveTracker.getApprovedOn());
+        return leaveTrackerDto;
+
+    }
+    
 }

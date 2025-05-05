@@ -1,13 +1,18 @@
 package com.hrms.employee.management.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.hrms.employee.management.dto.DailyTimesheetDto;
 import com.hrms.employee.management.dto.TimesheetDto;
 import com.hrms.employee.management.service.TimesheetService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/employees/{employeeId}/timesheets")
@@ -31,6 +36,20 @@ public class TimesheetController {
         List<TimesheetDto> timesheetHistory = timesheetService.getTimesheetByEmployeeId(employeeId);
         return ResponseEntity.ok(timesheetHistory);
     }   
+
+    @GetMapping("/monthly")
+    public ResponseEntity<List<TimesheetDto>> getMonthlyTimesheet(@PathVariable String employeeId, @RequestParam int month,@RequestParam int year) {
+        List<TimesheetDto> monthlyTimesheet = timesheetService.getMonthlyTimesheet(employeeId, month,year);
+        return ResponseEntity.ok(monthlyTimesheet);
+    }
+ 
+    @GetMapping("/daily")
+    public ResponseEntity<DailyTimesheetDto> getDailyTimesheet(@PathVariable String employeeId, @RequestParam LocalDate date) {
+        DailyTimesheetDto dailyTimesheet = timesheetService.getDailyTimesheet(employeeId, date);
+        return ResponseEntity.ok(dailyTimesheet);
+    }
+
+
 
     @PutMapping("/clock")
     public ResponseEntity<TimesheetDto> clockIn(@PathVariable String employeeId, @RequestBody TimesheetDto timesheetDto) {
