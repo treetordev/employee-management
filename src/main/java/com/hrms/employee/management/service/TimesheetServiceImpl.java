@@ -110,13 +110,13 @@ public class TimesheetServiceImpl implements TimesheetService {
     }
 
     @Override
-    public List<TimesheetDto> getMonthlyTimesheet(String employeeId, int month,int year) {
-        List<Timesheet> timesheets = timesheetRepository.findByEmployeeAndMonth(employeeId, month,year);
+    public List<TimesheetDto> getMonthlyTimesheet(String employeeId, int month, int year) {
+        List<Timesheet> timesheets = timesheetRepository.findByEmployeeAndMonth(employeeId, month, year);
         if (timesheets.isEmpty()) {
             throw new RuntimeException("No timesheet found for the given month.");
         }
-      //  LeaveTracker leaveTracker = leaveTrackerRepository.findLeaveByDateAndEmployeeId(date, employeeId);
-    
+        // LeaveTracker leaveTracker =
+        // leaveTrackerRepository.findLeaveByDateAndEmployeeId(date, employeeId);
 
         YearMonth yearMonth = YearMonth.of(year, month);
         int noOfDaysInMonth = yearMonth.lengthOfMonth();
@@ -145,64 +145,70 @@ public class TimesheetServiceImpl implements TimesheetService {
     public DailyTimesheetDto getDailyTimesheet(String employeeId, LocalDate date) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
-    
+
         EmployeeTimeSheetDto employeeTimeSheetDto = new EmployeeTimeSheetDto();
         employeeTimeSheetDto.setEmployeeId(employee.getEmployeeId());
         employeeTimeSheetDto.setEmployeeName(employee.getName());
         employeeTimeSheetDto.setEmployeeDepartment(employee.getJobTitle());
         employeeTimeSheetDto.setEmployeeDesignation(employee.getRole());
-    
-        String dayOfWeek = date.getDayOfWeek().name(); 
+
+        String dayOfWeek = date.getDayOfWeek().name();
         LocalDate today = LocalDate.now();
         Timesheet timesheet = timesheetRepository.findByEmployeeAndDate(employeeId, date);
         LeaveTracker leaveTracker = leaveTrackerRepository.findLeaveByDateAndEmployeeId(date, employeeId);
-    
-        DailyTimesheetDto dailyTimesheetDto = new DailyTimesheetDto();
-        dailyTimesheetDto.setEmployee(employeeTimeSheetDto);
-        dailyTimesheetDto.setDate(date);
-        dailyTimesheetDto.setDayOfWeek(dayOfWeek);
-        dailyTimesheetDto.setEditable(false);
-        dailyTimesheetDto.setLeaveDay(false);
-        dailyTimesheetDto.setWeekend(false);
-        dailyTimesheetDto.setHoliday(false);
-        dailyTimesheetDto.setFutureDate(false);
-    
+
+        // Initial builder setup
+        DailyTimesheetDto.DailyTimesheetDtoBuilder builder = DailyTimesheetDto.builder()
+                .employee(employeeTimeSheetDto)
+                .date(date)
+                .dayOfWeek(dayOfWeek)
+                .editable(false)
+                .leaveDay(false)
+                .weekend(false)
+                .holiday(false)
+                .futureDate(false);
+
         if (leaveTracker != null && (date.isBefore(today) || date.isEqual(today))) {
-            dailyTimesheetDto.setTimesheetStatus("Leave");
-            dailyTimesheetDto.setLeaveTracker(convertToLeaveTrackerDto(leaveTracker));
-            return dailyTimesheetDto;
+            return builder
+                    .timesheetStatus("Leave")
+                    .leaveTracker(convertToLeaveTrackerDto(leaveTracker))
+                    .build();
         }
-    
+
         if (date.isAfter(today) && leaveTracker != null) {
-            dailyTimesheetDto.setTimesheetStatus("Future Date");
-            dailyTimesheetDto.setFutureDate(true);
-            return dailyTimesheetDto;
+            return builder
+                    .timesheetStatus("Future Date")
+                    .futureDate(true)
+                    .build();
         }
-    
-        if (dayOfWeek.equals("SATURDAY") || dayOfWeek.equals("SUNDAY")) {
-            dailyTimesheetDto.setTimesheetStatus("weekend");
-            dailyTimesheetDto.setWeekend(true);
-            return dailyTimesheetDto;
+
+        if (dayOfWeek.equalsIgnoreCase("SATURDAY") || dayOfWeek.equalsIgnoreCase("SUNDAY")) {
+            return builder
+                    .timesheetStatus("weekend")
+                    .weekend(true)
+                    .build();
         }
-    
-        if(date.isAfter(today)) {
-            dailyTimesheetDto.setMessage("Employee data not found.");
-            return dailyTimesheetDto;
+
+        if (date.isAfter(today)) {
+            return builder
+                    .message("Employee data not found.")
+                    .build();
         }
 
         if (timesheet != null) {
-            dailyTimesheetDto.setTimesheetStatus("filled");
-            dailyTimesheetDto.setTimesheet(convertToDto(timesheet));
+            return builder
+                    .timesheetStatus("filled")
+                    .timesheet(convertToDto(timesheet))
+                    .build();
         } else {
-            dailyTimesheetDto.setTimesheetStatus("unfilled");
-            dailyTimesheetDto.setEditable(true);
-            dailyTimesheetDto.setMessage("Please complete your timesheet for this day.");
+            return builder
+                    .timesheetStatus("unfilled")
+                    .editable(true)
+                    .message("Please complete your timesheet for this day.")
+                    .build();
         }
-       
-    
-        return dailyTimesheetDto;
     }
-    
+
     private LeaveTrackerDto convertToLeaveTrackerDto(LeaveTracker leaveTracker) {
         LeaveTrackerDto leaveTrackerDto = new LeaveTrackerDto();
         leaveTrackerDto.setLeaveId(leaveTracker.getId());
@@ -216,5 +222,5 @@ public class TimesheetServiceImpl implements TimesheetService {
         return leaveTrackerDto;
 
     }
-    
+
 }

@@ -2,9 +2,11 @@ package com.hrms.employee.management.dto;
 
 import java.time.LocalDate;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class DailyTimesheetDto {
 
     private LocalDate date;
@@ -12,11 +14,11 @@ public class DailyTimesheetDto {
     private EmployeeTimeSheetDto employee;
     private String timesheetStatus;
     private TimesheetDto timesheet;
-    private boolean isEditable;
-    private boolean isLeaveDay;
-    private boolean isWeekend;
-    private boolean isHoliday;  
-    private boolean isFutureDate;
+    private boolean editable;
+    private boolean leaveDay;
+    private boolean weekend;
+    private boolean holiday;
+    private boolean futureDate;
     private LeaveTrackerDto leaveTracker;
     private String message;
 }
