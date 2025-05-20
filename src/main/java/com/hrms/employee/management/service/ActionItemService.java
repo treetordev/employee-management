@@ -26,7 +26,7 @@ public class ActionItemService {
     public void createActionItem(String employeeId, LeaveTracker leaveTracker, String assignedManagerId) {
         if(assignedManagerId==null || assignedManagerId.isEmpty())
             return;
-        String url = utilityBaseUrl + "/action-items";
+        String url = utilityBaseUrl + "/action-item";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         ActionItemExtRequest request= ActionItemHelper.convertToLeaveRequest(leaveTracker, employeeId,assignedManagerId);
