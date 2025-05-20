@@ -3,6 +3,7 @@ package com.hrms.employee.management.service;
 import com.hrms.employee.management.dao.LeaveTracker;
 import com.hrms.employee.management.dto.ActionItemExtRequest;
 import com.hrms.employee.management.utility.ActionItemHelper;
+import com.hrms.employee.management.utility.TenantContext;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,7 @@ public class ActionItemService {
             return;
         String url = utilityBaseUrl + "/action-item";
         HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Tenant-Id", TenantContext.getCurrentTenant());
         headers.setContentType(MediaType.APPLICATION_JSON);
         ActionItemExtRequest request= ActionItemHelper.convertToLeaveRequest(leaveTracker, employeeId,assignedManagerId);
         log.info("ex request :{}",request);
