@@ -19,6 +19,9 @@ public class ActionItemService {
     @Autowired
     RestTemplate restTemplate;
 
+    @Autowired
+    ActionItemExtRequest request;
+
     @Value("${utility_base_url}")
     private String utilityBaseUrl;
 
@@ -29,8 +32,9 @@ public class ActionItemService {
         String url = utilityBaseUrl + "/action-items";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        ActionItemExtRequest request= ActionItemHelper.convertToLeaveRequest(leaveTracker, employeeId,assignedManagerId);
+        request= ActionItemHelper.convertToLeaveRequest(leaveTracker, employeeId,assignedManagerId);
         log.info("ex request :{}",request);
+        log.info("url :{}",url);
         HttpEntity<ActionItemExtRequest> requestEntity = new HttpEntity<>(request, headers);
         restTemplate.postForEntity(
                 url,
