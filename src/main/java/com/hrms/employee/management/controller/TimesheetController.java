@@ -33,7 +33,7 @@ public class TimesheetController {
     }   
 
     @PutMapping("/clock")
-    public ResponseEntity<TimesheetDto> clockIn(@PathVariable String employeeId, @RequestBody TimesheetDto timesheetDto) {
+    public ResponseEntity<TimesheetDto> clockInOut(@PathVariable String employeeId, @RequestBody TimesheetDto timesheetDto) {
         TimesheetDto result = timesheetService.clock(employeeId, timesheetDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
