@@ -2,7 +2,6 @@ package com.hrms.employee.management.service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.hrms.employee.management.dto.GenerateTokenRequest;
 import com.hrms.employee.management.dto.OnboardKeycloakUserRequest;
@@ -44,8 +43,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Employee createEmployee(EmployeeDto employeeDto) {
+    public Employee createEmployee(EmployeeDto employeeDto, String userId) {
         Employee employee = employeeMapper.toEntity(employeeDto);
+        employee.setEmployeeId(userId);
         return employeeRepository.save(employee);
     }
 
@@ -166,7 +166,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee findEmployeesByKcRefId(String kcRefId) {
-       return employeeRepository.findByKcReferenceId(kcRefId)
+       return employeeRepository.findById(kcRefId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
     }
 

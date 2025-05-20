@@ -7,7 +7,7 @@ import com.hrms.employee.management.dto.EmployeeCountDto;
 import com.hrms.employee.management.dto.EmployeeDto;
 
 public interface EmployeeService {
-    Employee createEmployee(EmployeeDto employeeDto);
+    Employee createEmployee(EmployeeDto employeeDto, String userId);
     Employee updateEmployee(String employeeId, EmployeeDto employeeDto);
     Employee getEmployeeById(String employeeId);
     List<Employee> getAllEmployees();

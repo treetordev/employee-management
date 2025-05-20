@@ -25,8 +25,8 @@ public class EmployeeController {
     @PostMapping
     public ResponseEntity<Employee> createEmployee(@RequestBody EmployeeDto employeeDto) {
         String userId=employeeService.onboardUserInKeycloak(employeeDto, TenantContext.getCurrentTenant());
-        employeeDto.setKcReferenceId(userId);
-        Employee createdEmployee = employeeService.createEmployee(employeeDto);
+       // employeeDto.setKcReferenceId(userId);
+        Employee createdEmployee = employeeService.createEmployee(employeeDto,userId);
         return ResponseEntity.ok(createdEmployee);
     }
 
