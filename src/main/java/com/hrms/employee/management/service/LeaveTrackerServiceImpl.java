@@ -44,6 +44,11 @@ public class LeaveTrackerServiceImpl implements LeaveTrackerService {
         return savedLeave;
 
     }
+    @Override
+    public LeaveTracker getLeaveById(Long id) {
+        return leaveTrackerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Leave not found"));
+    }
 
     @Override
     public List<LeaveTracker> getLeaveHistory(String employeeId) {

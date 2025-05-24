@@ -30,12 +30,19 @@ public class TimesheetController {
     public ResponseEntity<List<TimesheetDto>> getTimesheetHistory(@PathVariable String employeeId) {
         List<TimesheetDto> timesheetHistory = timesheetService.getTimesheetByEmployeeId(employeeId);
         return ResponseEntity.ok(timesheetHistory);
-    }   
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TimesheetDto> getTimesheetById(@PathVariable String employeeId, @PathVariable Long id) {
+        TimesheetDto timesheet = timesheetService.getTimesheetById(id);
+
+        return ResponseEntity.ok(timesheet);
+    }
 
     @PutMapping("/clock")
     public ResponseEntity<TimesheetDto> clockInOut(@PathVariable String employeeId, @RequestBody TimesheetDto timesheetDto) {
         TimesheetDto result = timesheetService.clock(employeeId, timesheetDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
-    
+
 }
