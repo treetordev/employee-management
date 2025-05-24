@@ -8,4 +8,5 @@ import com.hrms.employee.management.dto.LeaveTrackerDto;
 public interface LeaveTrackerService {
     LeaveTracker applyLeave(String employeeId, LeaveTrackerDto leaveTrackerDto);
     List<LeaveTracker> getLeaveHistory(String employeeId);
+    LeaveTracker getLeaveById(Long id);
 }

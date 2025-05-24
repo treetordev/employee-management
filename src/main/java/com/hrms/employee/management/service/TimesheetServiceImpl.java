@@ -52,6 +52,14 @@ public class TimesheetServiceImpl implements TimesheetService {
         return timesheets.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
+     @Override
+    public TimesheetDto getTimesheetById(Long id) {
+        Timesheet timesheet = timesheetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Timesheet not found"));
+        return convertToDto(timesheet);
+    }
+
+
     private TimesheetDto convertToDto(Timesheet timesheet) {
         TimesheetDto dto = new TimesheetDto();
         dto.setTimesheetId(timesheet.getId());

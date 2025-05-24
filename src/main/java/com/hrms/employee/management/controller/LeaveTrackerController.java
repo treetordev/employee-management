@@ -26,6 +26,12 @@ public class LeaveTrackerController {
         return ResponseEntity.ok(leave);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<LeaveTracker> getLeaveById(@PathVariable String employeeId, @PathVariable Long id) {
+        LeaveTracker leave = leaveTrackerService.getLeaveById(id);
+        return ResponseEntity.ok(leave);
+    }
+
     @GetMapping
     public ResponseEntity<List<LeaveTracker>> getLeaveHistory(@PathVariable String employeeId) {
         List<LeaveTracker> leaveHistory = leaveTrackerService.getLeaveHistory(employeeId);
