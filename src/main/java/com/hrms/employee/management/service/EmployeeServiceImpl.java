@@ -130,7 +130,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             WorkDaysDto workDay = new WorkDaysDto();
             LocalDate currentDate = startDate.plusDays(i - 1);
             String dayOfWeek = startDate.plusDays(i - 1).getDayOfWeek().name();
-            workDay.setDate(currentDate);
+            workDay.setDate(currentDate.toString());
             workDay.setDayOfWeek(dayOfWeek);
 
             if (timesheets.stream().anyMatch(ts -> ts.getWorkDate().equals(currentDate))) {
