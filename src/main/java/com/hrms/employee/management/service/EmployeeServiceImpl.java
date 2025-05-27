@@ -1,5 +1,9 @@
 package com.hrms.employee.management.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,11 +16,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import com.hrms.employee.management.dao.Employee;
+import com.hrms.employee.management.dao.LeaveTracker;
+import com.hrms.employee.management.dao.Timesheet;
 import com.hrms.employee.management.dto.EmployeeCountDto;
 import com.hrms.employee.management.dto.EmployeeDto;
+import com.hrms.employee.management.dto.EmployeeReportResponse;
+import com.hrms.employee.management.dto.GenerateTokenRequest;
+import com.hrms.employee.management.dto.OnboardKeycloakUserRequest;
+import com.hrms.employee.management.dto.SummaryDto;
+import com.hrms.employee.management.dto.WorkDaysDto;
 import com.hrms.employee.management.repository.EmployeeRepository;
+import com.hrms.employee.management.repository.LeaveTrackerRepository;
+import com.hrms.employee.management.repository.TimesheetRepository;
+
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -35,11 +52,21 @@ public class EmployeeServiceImpl implements EmployeeService {
     private RestTemplate restTemplate;
 
     private final EmployeeRepository employeeRepository;
+    private final TimesheetRepository timesheetRepository;
+    private final LeaveTrackerRepository leaveTrackerRepository;
     private final EmployeeMapper employeeMapper;
+    private final TimesheetMapper timesheetMapper;
+    private final LeaveTrackerMapper leaveTrackerMapper;
 
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper) {
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper,
+    TimesheetRepository timesheetRepository, LeaveTrackerRepository leaveTrackerRepository,
+                               TimesheetMapper timesheetMapper, LeaveTrackerMapper leaveTrackerMapper) {
         this.employeeRepository = employeeRepository;
         this.employeeMapper = employeeMapper;
+        this.timesheetRepository = timesheetRepository;
+        this.leaveTrackerRepository = leaveTrackerRepository;
+        this.timesheetMapper = timesheetMapper;
+        this.leaveTrackerMapper = leaveTrackerMapper;
     }
 
     @Override
@@ -73,6 +100,105 @@ public class EmployeeServiceImpl implements EmployeeService {
         long totalEmployees = employeeRepository.count();
         long activeEmployees = employeeRepository.countByJobStatus("Active");
         return new EmployeeCountDto(totalEmployees, activeEmployees);
+    }
+
+    @Override
+    public EmployeeReportResponse getEmployeeReportById(String employeeId, int month, int year) {
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int noOfDaysInMonth = yearMonth.lengthOfMonth();
+        LocalDate startDate = YearMonth.of(year, month).atDay(1);
+        LocalDate endDate = YearMonth.of(year, month).atEndOfMonth();
+        List<LeaveTracker> leaves = leaveTrackerRepository.findByEmployeeAndMonth(employeeId, startDate, endDate);
+        List<Timesheet> timesheets = timesheetRepository.findByEmployeeAndMonth(employeeId, month, year);
+
+        EmployeeReportResponse reportResponses = new EmployeeReportResponse();
+        reportResponses.setEmployeeId(employee.getEmployeeId());
+        reportResponses.setEmployeeName(employee.getName());
+        reportResponses.setYear(year);
+        reportResponses.setMonth(month);
+        reportResponses.setMonthName(yearMonth.getMonth().name());
+        List<String> weekends = new ArrayList<>();
+        weekends.add("SATURDAY");
+        weekends.add("SUNDAY");
+        int weekendCount=0;
+        List<WorkDaysDto> workDays = new ArrayList<>();
+        for (int i = 1; i <= noOfDaysInMonth; i++) {
+            WorkDaysDto workDay = new WorkDaysDto();
+            LocalDate currentDate = startDate.plusDays(i - 1);
+            String dayOfWeek = startDate.plusDays(i - 1).getDayOfWeek().name();
+            workDay.setDate(currentDate);
+            workDay.setDayOfWeek(dayOfWeek);
+
+            if (timesheets.stream().anyMatch(ts -> ts.getWorkDate().equals(currentDate))) {
+                Timesheet timesheet = timesheets.stream()
+                        .filter(ts -> ts.getWorkDate().equals(currentDate))
+                        .findFirst()
+                        .orElse(null);
+                workDay.setStatus("PRESENT");
+                workDay.setTimesheetDto(timesheetMapper.convertToEntity(timesheet));
+                workDay.setLeaveTrackerDto(null);
+            } else if (weekends.contains(dayOfWeek)) {
+                workDay.setStatus("WEEKEND");
+                workDay.setLeaveTrackerDto(null);
+                workDay.setTimesheetDto(null);
+                weekendCount++;
+            }
+
+            else if (leaves.stream().anyMatch(
+                    lt -> (lt.getStartDate().isEqual(currentDate) || lt.getStartDate().isBefore(currentDate)) &&
+                            (lt.getEndDate().isEqual(currentDate) || lt.getEndDate().isAfter(currentDate)))) {
+
+                LeaveTracker leave = leaves.stream()
+                        .filter(lt -> (lt.getStartDate().isEqual(currentDate)
+                                || lt.getStartDate().isBefore(currentDate)) &&
+                                (lt.getEndDate().isEqual(currentDate) || lt.getEndDate().isAfter(currentDate)))
+                        .findFirst()
+                        .orElse(null);
+
+                workDay.setStatus("ON_Leave");
+                workDay.setLeaveTrackerDto(leaveTrackerMapper.convertToDto(leave));
+
+            } else {
+                Timesheet emptyTimesheet = new Timesheet();
+                emptyTimesheet.setWorkDate(currentDate);
+                emptyTimesheet.setClockIn(LocalTime.parse("00:00:00"));
+                emptyTimesheet.setClockOut(LocalTime.parse("00:00:00"));
+                emptyTimesheet.setTotalHours(0.0);
+                emptyTimesheet.setEmployee(employee);
+                workDay.setTimesheetDto(timesheetMapper.convertToEntity(emptyTimesheet));
+                workDay.setStatus("Unfilled");
+                workDay.setLeaveTrackerDto(null);
+
+            }
+            workDays.add(workDay);
+        }
+        SummaryDto summary = new SummaryDto();
+        int totalWorkingDays = noOfDaysInMonth - weekendCount;
+        Double workingHour= 9.00; 
+        Double totalWorkingHours = totalWorkingDays * workingHour;
+
+        summary.setTotalWorkDays(noOfDaysInMonth);
+        summary.setTotalPresentDays(((int) workDays.stream()
+                .filter(wd -> "PRESENT".equals(wd.getStatus())).count() ) - weekendCount);
+        summary.setTotalAbsentDays((int) workDays.stream()
+                .filter(wd -> "Unfilled".equals(wd.getStatus())).count());
+        summary.setTotalLeaveDays((int) workDays.stream()
+                .filter(wd -> "ON_Leave".equals(wd.getStatus())).count());
+        summary.setTotalWfhDays(0); 
+        summary.setTotalWorkingHours(totalWorkingHours);
+        summary.setTotalRegularHours( workDays.stream()
+                .filter(wd -> wd.getTimesheetDto() != null)
+                .mapToDouble(wd -> wd.getTimesheetDto().getTotalHours())
+                .sum());
+        summary.setTotalOvertimeHours(totalWorkingHours - summary.getTotalRegularHours());
+        reportResponses.setWorkDays(workDays);
+        reportResponses.setSummary(summary);
+
+        return reportResponses;
     }
 
     @Override
@@ -166,7 +292,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee findEmployeesByKcRefId(String kcRefId) {
-       return employeeRepository.findById(kcRefId)
+        return employeeRepository.findById(kcRefId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
     }
 

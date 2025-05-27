@@ -5,6 +5,7 @@ import java.util.List;
 import com.hrms.employee.management.dao.Employee;
 import com.hrms.employee.management.dto.EmployeeCountDto;
 import com.hrms.employee.management.dto.EmployeeDto;
+import com.hrms.employee.management.dto.EmployeeReportResponse;
 
 public interface EmployeeService {
     Employee createEmployee(EmployeeDto employeeDto, String userId);
@@ -25,4 +26,5 @@ public interface EmployeeService {
     void assignManagerToEmployee(String employeeId, String managerEmpId);
 
     Employee findEmployeesByKcRefId(String kcRefId);
+    EmployeeReportResponse getEmployeeReportById(String employeeId,int month,int year);
 }
