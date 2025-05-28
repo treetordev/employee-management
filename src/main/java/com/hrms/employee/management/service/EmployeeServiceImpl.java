@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hrms.employee.management.dto.GenerateTokenRequest;
+import com.hrms.employee.management.dto.LeaveTrackerDto;
 import com.hrms.employee.management.dto.OnboardKeycloakUserRequest;
 import com.hrms.employee.management.utility.*;
 import lombok.extern.log4j.Log4j2;
@@ -29,6 +30,7 @@ import com.hrms.employee.management.dto.EmployeeReportResponse;
 import com.hrms.employee.management.dto.GenerateTokenRequest;
 import com.hrms.employee.management.dto.OnboardKeycloakUserRequest;
 import com.hrms.employee.management.dto.SummaryDto;
+import com.hrms.employee.management.dto.TimesheetDto;
 import com.hrms.employee.management.dto.WorkDaysDto;
 import com.hrms.employee.management.repository.EmployeeRepository;
 import com.hrms.employee.management.repository.LeaveTrackerRepository;
@@ -59,8 +61,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final LeaveTrackerMapper leaveTrackerMapper;
 
     public EmployeeServiceImpl(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper,
-    TimesheetRepository timesheetRepository, LeaveTrackerRepository leaveTrackerRepository,
-                               TimesheetMapper timesheetMapper, LeaveTrackerMapper leaveTrackerMapper) {
+            TimesheetRepository timesheetRepository, LeaveTrackerRepository leaveTrackerRepository,
+            TimesheetMapper timesheetMapper, LeaveTrackerMapper leaveTrackerMapper) {
         this.employeeRepository = employeeRepository;
         this.employeeMapper = employeeMapper;
         this.timesheetRepository = timesheetRepository;
@@ -112,19 +114,23 @@ public class EmployeeServiceImpl implements EmployeeService {
         int noOfDaysInMonth = yearMonth.lengthOfMonth();
         LocalDate startDate = YearMonth.of(year, month).atDay(1);
         LocalDate endDate = YearMonth.of(year, month).atEndOfMonth();
+
         List<LeaveTracker> leaves = leaveTrackerRepository.findByEmployeeAndMonth(employeeId, startDate, endDate);
         List<Timesheet> timesheets = timesheetRepository.findByEmployeeAndMonth(employeeId, month, year);
 
-        EmployeeReportResponse reportResponses = new EmployeeReportResponse();
-        reportResponses.setEmployeeId(employee.getEmployeeId());
-        reportResponses.setEmployeeName(employee.getName());
-        reportResponses.setYear(year);
-        reportResponses.setMonth(month);
-        reportResponses.setMonthName(yearMonth.getMonth().name());
+        EmployeeReportResponse reportResponses = EmployeeReportResponse.builder()
+                .employeeId(employee.getEmployeeId())
+                .employeeName(employee.getName())
+                .year(year)
+                .month(month)
+                .monthName(yearMonth.getMonth().name())
+                .build();
+
         List<String> weekends = new ArrayList<>();
         weekends.add("SATURDAY");
         weekends.add("SUNDAY");
-        int weekendCount=0;
+
+        int weekendCount = 0;
         List<WorkDaysDto> workDays = new ArrayList<>();
         for (int i = 1; i <= noOfDaysInMonth; i++) {
             WorkDaysDto workDay = new WorkDaysDto();
@@ -133,13 +139,9 @@ public class EmployeeServiceImpl implements EmployeeService {
             workDay.setDate(currentDate.toString());
             workDay.setDayOfWeek(dayOfWeek);
 
-            if (timesheets.stream().anyMatch(ts -> ts.getWorkDate().equals(currentDate))) {
-                Timesheet timesheet = timesheets.stream()
-                        .filter(ts -> ts.getWorkDate().equals(currentDate))
-                        .findFirst()
-                        .orElse(null);
+            if (hasTimesheetOnDate(currentDate, timesheets)) {
                 workDay.setStatus("PRESENT");
-                workDay.setTimesheetDto(timesheetMapper.convertToEntity(timesheet));
+                workDay.setTimesheetDto(getTimesheetDto(currentDate, timesheets));
                 workDay.setLeaveTrackerDto(null);
             } else if (weekends.contains(dayOfWeek)) {
                 workDay.setStatus("WEEKEND");
@@ -147,56 +149,21 @@ public class EmployeeServiceImpl implements EmployeeService {
                 workDay.setTimesheetDto(null);
                 weekendCount++;
             }
-
-            else if (leaves.stream().anyMatch(
-                    lt -> (lt.getStartDate().isEqual(currentDate) || lt.getStartDate().isBefore(currentDate)) &&
-                            (lt.getEndDate().isEqual(currentDate) || lt.getEndDate().isAfter(currentDate)))) {
-
-                LeaveTracker leave = leaves.stream()
-                        .filter(lt -> (lt.getStartDate().isEqual(currentDate)
-                                || lt.getStartDate().isBefore(currentDate)) &&
-                                (lt.getEndDate().isEqual(currentDate) || lt.getEndDate().isAfter(currentDate)))
-                        .findFirst()
-                        .orElse(null);
-
+            else if (hasLeaveOnDate(currentDate, leaves)) {
                 workDay.setStatus("ON_Leave");
-                workDay.setLeaveTrackerDto(leaveTrackerMapper.convertToDto(leave));
+                workDay.setTimesheetDto(null);
+                workDay.setLeaveTrackerDto(getLeaveTrackerDto(currentDate, leaves));
 
             } else {
-                Timesheet emptyTimesheet = new Timesheet();
-                emptyTimesheet.setWorkDate(currentDate);
-                emptyTimesheet.setClockIn(LocalTime.parse("00:00:00"));
-                emptyTimesheet.setClockOut(LocalTime.parse("00:00:00"));
-                emptyTimesheet.setTotalHours(0.0);
-                emptyTimesheet.setEmployee(employee);
-                workDay.setTimesheetDto(timesheetMapper.convertToEntity(emptyTimesheet));
-                workDay.setStatus("Unfilled");
+                workDay.setTimesheetDto(getEmptyTimesheetDto(employeeId, currentDate));
+                workDay.setStatus("UNFILLED");
                 workDay.setLeaveTrackerDto(null);
 
             }
             workDays.add(workDay);
         }
-        SummaryDto summary = new SummaryDto();
-        int totalWorkingDays = noOfDaysInMonth - weekendCount;
-        Double workingHour= 9.00; 
-        Double totalWorkingHours = totalWorkingDays * workingHour;
-
-        summary.setTotalWorkDays(noOfDaysInMonth);
-        summary.setTotalPresentDays(((int) workDays.stream()
-                .filter(wd -> "PRESENT".equals(wd.getStatus())).count() ) - weekendCount);
-        summary.setTotalAbsentDays((int) workDays.stream()
-                .filter(wd -> "Unfilled".equals(wd.getStatus())).count());
-        summary.setTotalLeaveDays((int) workDays.stream()
-                .filter(wd -> "ON_Leave".equals(wd.getStatus())).count());
-        summary.setTotalWfhDays(0); 
-        summary.setTotalWorkingHours(totalWorkingHours);
-        summary.setTotalRegularHours( workDays.stream()
-                .filter(wd -> wd.getTimesheetDto() != null)
-                .mapToDouble(wd -> wd.getTimesheetDto().getTotalHours())
-                .sum());
-        summary.setTotalOvertimeHours(totalWorkingHours - summary.getTotalRegularHours());
         reportResponses.setWorkDays(workDays);
-        reportResponses.setSummary(summary);
+        reportResponses.setSummary(getEmployeeSummary(workDays, noOfDaysInMonth, weekendCount));
 
         return reportResponses;
     }
@@ -294,6 +261,72 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee findEmployeesByKcRefId(String kcRefId) {
         return employeeRepository.findById(kcRefId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
+    }
+
+    public SummaryDto getEmployeeSummary(List<WorkDaysDto> workDaysDto, int noOfDaysInMonth, int weekendCount) {
+
+        int totalWorkingDays = noOfDaysInMonth - weekendCount;
+        Double workingHour = 9.00;
+        Double totalWorkingHours = totalWorkingDays * workingHour;
+
+        SummaryDto summaryDto = SummaryDto.builder()
+                .totalWorkDays(totalWorkingDays)
+                .totalPresentDays((int) workDaysDto.stream()
+                        .filter(wd -> "PRESENT".equals(wd.getStatus())).count())
+                .totalAbsentDays((int) workDaysDto.stream()
+                        .filter(wd -> "UNFILLED".equals(wd.getStatus())).count())
+                .totalLeaveDays((int) workDaysDto.stream()
+                        .filter(wd -> "ON_Leave".equals(wd.getStatus())).count())
+                .totalWfhDays(0)
+                .totalWorkingHours(totalWorkingHours)
+                .totalRegularHours(workDaysDto.stream()
+                        .filter(wd -> wd.getTimesheetDto() != null)
+                        .mapToDouble(wd -> wd.getTimesheetDto().getTotalHours()).sum())
+                .totalOvertimeHours(totalWorkingHours - workDaysDto.stream()
+                        .filter(wd -> wd.getTimesheetDto() != null)
+                        .mapToDouble(wd -> wd.getTimesheetDto().getTotalHours()).sum())
+                .build();
+
+        return summaryDto;
+    }
+
+    public TimesheetDto getEmptyTimesheetDto(String employeeId, LocalDate currentDate) {
+        TimesheetDto emptyTimesheet = new TimesheetDto();
+        emptyTimesheet.setWorkDate(currentDate);
+        emptyTimesheet.setClockIn(LocalTime.parse("00:00:00"));
+        emptyTimesheet.setClockOut(LocalTime.parse("00:00:00"));
+        emptyTimesheet.setTotalHours(0.0);
+        emptyTimesheet.setEmployeeId(employeeId);
+        return emptyTimesheet;
+    }
+
+    public boolean hasTimesheetOnDate(LocalDate date, List<Timesheet> timesheets) {
+        return timesheets.stream().anyMatch(ts -> ts.getWorkDate().isEqual(date));
+    }
+
+    public TimesheetDto getTimesheetDto(LocalDate date, List<Timesheet> timesheets) {
+        Timesheet timesheet = timesheets.stream()
+                        .filter(ts -> ts.getWorkDate().isEqual(date))
+                        .findFirst()
+                        .orElse(null);
+        
+        return timesheetMapper.convertToEntity(timesheet);
+    }
+
+    public boolean hasLeaveOnDate(LocalDate date, List<LeaveTracker> leaves) {
+        return leaves.stream().anyMatch(lt -> (lt.getStartDate().isEqual(date) || lt.getStartDate().isBefore(date))
+                && (lt.getEndDate().isEqual(date) || lt.getEndDate().isAfter(date)));
+    }
+
+    public LeaveTrackerDto getLeaveTrackerDto(LocalDate date,List<LeaveTracker> leaves) {
+        LeaveTracker leave = leaves.stream()
+                        .filter(lt -> (lt.getStartDate().isEqual(date)
+                                || lt.getStartDate().isBefore(date)) &&
+                                (lt.getEndDate().isEqual(date) || lt.getEndDate().isAfter(date)))
+                        .findFirst()
+                        .orElse(null);
+        
+        return leaveTrackerMapper.convertToDto(leave);
     }
 
 }
