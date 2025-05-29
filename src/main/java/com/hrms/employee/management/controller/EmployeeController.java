@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.hrms.employee.management.dao.Employee;
 import com.hrms.employee.management.dto.EmployeeCountDto;
 import com.hrms.employee.management.dto.EmployeeDto;
+import com.hrms.employee.management.dto.EmployeeReportResponse;
 import com.hrms.employee.management.service.EmployeeService;
 
 @RestController
@@ -40,6 +41,12 @@ public class EmployeeController {
     @GetMapping("/{employeeId}")
     public ResponseEntity<Employee> getEmployeeById(@PathVariable String employeeId) {
         Employee employee = employeeService.getEmployeeById(employeeId);
+        return ResponseEntity.ok(employee);
+    }
+
+    @GetMapping("/report/{employeeId}")
+    public ResponseEntity<EmployeeReportResponse> getEmployeeReportById(@PathVariable String employeeId,@RequestParam int month,@RequestParam int year) {
+        EmployeeReportResponse employee = employeeService.getEmployeeReportById(employeeId,month,year);
         return ResponseEntity.ok(employee);
     }
 
