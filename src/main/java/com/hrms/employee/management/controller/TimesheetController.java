@@ -1,5 +1,6 @@
 package com.hrms.employee.management.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,12 @@ public class TimesheetController {
     public ResponseEntity<TimesheetDto> clockInOut(@PathVariable String employeeId, @RequestBody TimesheetDto timesheetDto) {
         TimesheetDto result = timesheetService.clock(employeeId, timesheetDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @GetMapping("/date/{date}")
+    public ResponseEntity<TimesheetDto> getTimesheetByDate(@PathVariable String employeeId,@PathVariable LocalDate date) {
+        TimesheetDto timesheetEntry = timesheetService.getTimesheetByEmployeeIdAndDate(employeeId,date);
+        return ResponseEntity.ok(timesheetEntry);
     }
 
 }

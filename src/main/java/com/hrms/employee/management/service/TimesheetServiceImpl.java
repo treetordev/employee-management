@@ -1,6 +1,7 @@
 package com.hrms.employee.management.service;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,5 +104,10 @@ public class TimesheetServiceImpl implements TimesheetService {
         Timesheet savedTimesheet = timesheetRepository.save(timesheet);
 
         return convertToDto(savedTimesheet);
+    }
+
+    @Override
+    public TimesheetDto getTimesheetByEmployeeIdAndDate(String employeeId, LocalDate date) {
+        return convertToDto(timesheetRepository.findByEmployeeIdAndWorkDaate(employeeId,date));
     }
 }

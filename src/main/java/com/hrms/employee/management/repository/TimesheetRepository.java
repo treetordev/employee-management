@@ -3,6 +3,7 @@ package com.hrms.employee.management.repository;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.hrms.employee.management.dto.TimesheetDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,4 +18,7 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
             @Param("year") int year);
 
     Timesheet findByworkDateAndEmployee_EmployeeId(LocalDate WorkDate, String employeeId);
+
+    @Query("SELECT t FROM Timesheet t WHERE t.workDate = :date AND t.employee.employeeId = :id")
+    Timesheet findByEmployeeIdAndWorkDaate(String id,LocalDate date);
 }
