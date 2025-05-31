@@ -1,8 +1,10 @@
 package com.hrms.employee.management.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.hrms.employee.management.dao.WFHTracker;
@@ -11,5 +13,9 @@ import com.hrms.employee.management.dao.WFHTracker;
 public interface WFHTrackerRepository extends JpaRepository<WFHTracker, Long> {
 
     List<WFHTracker> findAllByEmployee_EmployeeId(String employeeId);
+    WFHTracker findByIdAndEmployee_EmployeeId(Long id, String employeeId);
+
+    @Query("SELECT w FROM WFHTracker w WHERE w.employee.employeeId = :employeeId AND w.startDate <= :date AND w.endDate >= :date")
+    WFHTracker findByEmployeeIdAndDate(String employeeId, LocalDate date);
 
 }
