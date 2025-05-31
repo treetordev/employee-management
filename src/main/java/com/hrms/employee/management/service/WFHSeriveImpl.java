@@ -16,8 +16,11 @@ public class WFHSeriveImpl implements WFHService {
 
     private final WFHTrackerRepository wfhRepository;
     private final EmployeeRepository employeeRepository;
+    private ActionItemService actionItemService;
 
-    public WFHSeriveImpl(WFHTrackerRepository wfhRepository,EmployeeRepository employeeRepository) {
+    public WFHSeriveImpl(WFHTrackerRepository wfhRepository,EmployeeRepository employeeRepository,
+            ActionItemService actionItemService) {
+        this.actionItemService = actionItemService;
         this.wfhRepository = wfhRepository;
         this.employeeRepository = employeeRepository;
     }
@@ -34,8 +37,9 @@ public class WFHSeriveImpl implements WFHService {
                 .build();
         workFromHome.setEmployee(employee);
 
-        wfhRepository.save(workFromHome);
-   
+        WFHTracker wfhTracker = wfhRepository.save(workFromHome);
+
+        actionItemService.createActionItem(employeeId, wfhTracker, employee.getAssignedManagerId());
         return convertToResponse(workFromHome); 
     }
 
