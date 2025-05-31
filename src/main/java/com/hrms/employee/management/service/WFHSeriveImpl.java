@@ -1,0 +1,60 @@
+package com.hrms.employee.management.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.hrms.employee.management.dao.Employee;
+import com.hrms.employee.management.dao.WFHTracker;
+import com.hrms.employee.management.dto.WFHTrackerRequest;
+import com.hrms.employee.management.dto.WFHTrackerResponse;
+import com.hrms.employee.management.repository.EmployeeRepository;
+import com.hrms.employee.management.repository.WFHTrackerRepository;
+
+@Service
+public class WFHSeriveImpl implements WFHService {
+
+    private final WFHTrackerRepository wfhRepository;
+    private final EmployeeRepository employeeRepository;
+
+    public WFHSeriveImpl(WFHTrackerRepository wfhRepository,EmployeeRepository employeeRepository) {
+        this.wfhRepository = wfhRepository;
+        this.employeeRepository = employeeRepository;
+    }
+
+    public WFHTrackerResponse applyWFH(String employeeId, WFHTrackerRequest workFromHomeRequest) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        WFHTracker workFromHome = WFHTracker.builder()
+                .startDate(workFromHomeRequest.getStartDate())
+                .endDate(workFromHomeRequest.getEndDate())
+                .reason(workFromHomeRequest.getReason())
+                .status("APPROVED")
+                .build();
+        workFromHome.setEmployee(employee);
+
+        wfhRepository.save(workFromHome);
+   
+        return convertToResponse(workFromHome); 
+    }
+
+   
+    public List<WFHTrackerResponse> getWFHHistory(String employeeId) {
+        
+        List<WFHTracker> wfhTrackers = wfhRepository.findAllByEmployee_EmployeeId(employeeId);
+        return wfhTrackers.stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
+    public WFHTrackerResponse convertToResponse(WFHTracker wfhTracker) {
+        return WFHTrackerResponse.builder()
+                .id(wfhTracker.getId())
+                .startDate(wfhTracker.getStartDate())
+                .endDate(wfhTracker.getEndDate())
+                .reason(wfhTracker.getReason())
+                .status(wfhTracker.getStatus())
+                .build();
+    }
+}
