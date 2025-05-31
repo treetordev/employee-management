@@ -1,5 +1,6 @@
 package com.hrms.employee.management.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public class WFHSeriveImpl implements WFHService {
     private final WFHTrackerRepository wfhRepository;
     private final EmployeeRepository employeeRepository;
 
-    public WFHSeriveImpl(WFHTrackerRepository wfhRepository,EmployeeRepository employeeRepository) {
+    public WFHSeriveImpl(WFHTrackerRepository wfhRepository, EmployeeRepository employeeRepository) {
         this.wfhRepository = wfhRepository;
         this.employeeRepository = employeeRepository;
     }
@@ -35,17 +36,31 @@ public class WFHSeriveImpl implements WFHService {
         workFromHome.setEmployee(employee);
 
         wfhRepository.save(workFromHome);
-   
-        return convertToResponse(workFromHome); 
+
+        return convertToResponse(workFromHome);
     }
 
-   
     public List<WFHTrackerResponse> getWFHHistory(String employeeId) {
-        
+
         List<WFHTracker> wfhTrackers = wfhRepository.findAllByEmployee_EmployeeId(employeeId);
         return wfhTrackers.stream()
                 .map(this::convertToResponse)
                 .toList();
+    }
+
+    public WFHTrackerResponse getWFHDetailsById(String employeeId, Long id) {
+        WFHTracker wfhTracker = wfhRepository.findByIdAndEmployee_EmployeeId(id,employeeId);
+
+        if (wfhTracker == null) { 
+            throw new RuntimeException("WFH Tracker not found for the given ID and employee");
+        }
+
+        return convertToResponse(wfhTracker);
+    }
+
+    public WFHTrackerResponse getWFHByDate(String employeeId, LocalDate date) {
+        WFHTracker wfhTrackers = wfhRepository.findByEmployeeIdAndDate(employeeId,date);
+        return convertToResponse(wfhTrackers);
     }
 
     public WFHTrackerResponse convertToResponse(WFHTracker wfhTracker) {
