@@ -23,6 +23,9 @@ public class TimesheetServiceImpl implements TimesheetService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    ActionItemService actionItemService;
+
     @Override
     public TimesheetDto logWork(String employeeId, TimesheetDto timesheetDto) {
         // Fetch the employee
@@ -43,6 +46,7 @@ public class TimesheetServiceImpl implements TimesheetService {
         // Save the entity
         Timesheet savedTimesheet = timesheetRepository.save(timesheet);
 
+        actionItemService.createActionItem(employeeId, savedTimesheet, employee.getAssignedManagerId());
         // Convert and return DTO
         return convertToDto(savedTimesheet);
     }
@@ -98,10 +102,15 @@ public class TimesheetServiceImpl implements TimesheetService {
             timesheet.setClockOut(timesheetDto.getClockOut());
             Duration duration = Duration.between(timesheet.getClockIn(), timesheetDto.getClockOut());
             timesheet.setTotalHours(duration.toHours() + (duration.toMinutesPart() / 60.0));
+
+            
             
         }
 
         Timesheet savedTimesheet = timesheetRepository.save(timesheet);
+        if(savedTimesheet.getClockOut() != null) {
+            actionItemService.createActionItem(employeeId, savedTimesheet, employee.getAssignedManagerId());
+        }
 
         return convertToDto(savedTimesheet);
     }
