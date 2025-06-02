@@ -19,7 +19,7 @@ import lombok.Data;
 public class Employee {
 	
 	@Id
-    @Column(name = "employeeId", updatable = false, nullable = false, unique = true)
+    @Column(name = "employee_id", updatable = false, nullable = false, unique = true)
 	private String employeeId;
 	
 	private String name;

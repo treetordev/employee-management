@@ -30,7 +30,7 @@ public class WFHTracker {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "employeeId", nullable = false)
+    @JoinColumn(name = "employee_id", nullable = false)
     @JsonBackReference
     private Employee employee;
 
