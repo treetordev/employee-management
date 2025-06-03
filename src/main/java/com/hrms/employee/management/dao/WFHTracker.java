@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "WfhTracker")
+@Table(name = "wfh_tracker")
 public class WFHTracker {
 
     @Id

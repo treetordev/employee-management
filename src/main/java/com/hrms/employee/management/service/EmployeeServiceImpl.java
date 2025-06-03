@@ -53,6 +53,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private LeaveBalanceService leaveBalanceService;
+
     private final EmployeeRepository employeeRepository;
     private final TimesheetRepository timesheetRepository;
     private final LeaveTrackerRepository leaveTrackerRepository;
@@ -75,7 +78,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee createEmployee(EmployeeDto employeeDto, String userId) {
         Employee employee = employeeMapper.toEntity(employeeDto);
         employee.setEmployeeId(userId);
-        return employeeRepository.save(employee);
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        try {
+            leaveBalanceService.initializeLeaveBalanceForNewEmployee(userId);
+        } catch (Exception e) {
+            log.error("Failed to initialize leave balances for employee {}: {}", userId, e.getMessage());
+        }
+
+        return savedEmployee;
     }
 
     @Override
