@@ -31,6 +31,7 @@ public class ActionItemService {
         if (assignedManagerId == null || assignedManagerId.isEmpty())
             return;
         String url = utilityBaseUrl + "/action-item";
+        log.info("url to create action item :{}",url);
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-Tenant-Id", TenantContext.getCurrentTenant());
         headers.setContentType(MediaType.APPLICATION_JSON);
