@@ -256,7 +256,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         log.info("assigned group to user");
         RoleGroupExtResponse groupById = getGroupById(groupId);
         log.info("retreived data of group:{}",groupById);
-        grantAdminAccess(token,employeeId,TenantContext.getCurrentTenant(),groupById.getKcGroupIdRef());
+        Map<String,Object> masterRealmDetails =getMasterRealmDetails();
+        String kcToken=getKeycloakToken(masterRealmDetails);
+        grantAdminAccess(kcToken,employeeId,TenantContext.getCurrentTenant(),groupById.getKcGroupIdRef());
     }
 
     public RoleGroupExtResponse getGroupById(Long groupId) {
