@@ -7,10 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.hrms.employee.management.dto.GenerateTokenRequest;
-import com.hrms.employee.management.dto.LeaveTrackerDto;
-import com.hrms.employee.management.dto.OnboardKeycloakUserRequest;
+import com.hrms.employee.management.dto.*;
 import com.hrms.employee.management.utility.*;
+import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,14 +23,8 @@ import org.springframework.web.client.RestTemplate;
 import com.hrms.employee.management.dao.Employee;
 import com.hrms.employee.management.dao.LeaveTracker;
 import com.hrms.employee.management.dao.Timesheet;
-import com.hrms.employee.management.dto.EmployeeCountDto;
-import com.hrms.employee.management.dto.EmployeeDto;
-import com.hrms.employee.management.dto.EmployeeReportResponse;
 import com.hrms.employee.management.dto.GenerateTokenRequest;
 import com.hrms.employee.management.dto.OnboardKeycloakUserRequest;
-import com.hrms.employee.management.dto.SummaryDto;
-import com.hrms.employee.management.dto.TimesheetDto;
-import com.hrms.employee.management.dto.WorkDaysDto;
 import com.hrms.employee.management.repository.EmployeeRepository;
 import com.hrms.employee.management.repository.LeaveTrackerRepository;
 import com.hrms.employee.management.repository.TimesheetRepository;
@@ -39,6 +32,7 @@ import com.hrms.employee.management.repository.TimesheetRepository;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @Log4j2
@@ -49,6 +43,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Value("${tenant_management_base_url}")
     private String tenantUrl;
+
+    @Value("${admin_base_url}")
+    private String adminBaseUrl;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -247,7 +244,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public void assignGroupToEmployee(String employeeId, Long groupId) {
+    @Transactional
+    public void assignGroupToEmployee(String token,String employeeId, Long groupId) {
         Employee emp= employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         if(emp.getGroupId()!=null){
@@ -255,6 +253,55 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         emp.setGroupId(groupId);
         employeeRepository.save(emp);
+        log.info("assigned group to user");
+        RoleGroupExtResponse groupById = getGroupById(groupId);
+        log.info("retreived data of group:{}",groupById);
+        grantAdminAccess(token,employeeId,TenantContext.getCurrentTenant(),groupById.getKcGroupIdRef());
+    }
+
+    public RoleGroupExtResponse getGroupById(Long groupId) {
+
+        log.info("trying to get the group details");
+        String url = adminBaseUrl + "/admin/group/" + groupId;
+        log.info("url decoded :{}",url);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        // Add auth header if required
+        // headers.set("Authorization", "Bearer YOUR_TOKEN");
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<RoleGroupExtResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                RoleGroupExtResponse.class
+        );
+
+        return response.getBody();
+    }
+
+    public void grantAdminAccess(String token, String userId, String realmName,String groupId) {
+        String url = iamServiceBaseUrl + Constants.GRANT_ADMIN_ACCESS;
+        log.info("trying to get assign the group to the user in keycloak, with url :{}",url);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(url)
+                .queryParam("realmName", realmName)
+                .queryParam("userId", userId)
+                .queryParam("groupId",groupId);
+
+        HttpEntity<Void> entity = new HttpEntity<>(createHeaders(token));
+
+        makeApiCall(uriBuilder.toUriString(), HttpMethod.GET, entity, Void.class,
+                ErrorCodes.KEYCLOAK_ADMIN_ACCESS_ERROR, "Failed to grant admin access");
+    }
+    private <T> ResponseEntity<T> makeApiCall(String url, HttpMethod method, HttpEntity<?> entity, Class<T> responseType, int errorCode, String errorMessage) {
+        try {
+            return restTemplate.exchange(url, method, entity, responseType);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("{} - Status: {}, Response: {}", errorMessage, e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new KeycloakException(errorCode, errorMessage + " - Status: " + e.getStatusCode(), e);
+        }
     }
 
     @Override

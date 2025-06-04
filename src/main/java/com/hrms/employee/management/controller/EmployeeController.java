@@ -75,9 +75,10 @@ public class EmployeeController {
     }
     @PatchMapping("/{employeeId}/assign-group/{groupId}")
     public ResponseEntity<?> assignGroupToEmployee(
+            HttpServletRequest request,
             @PathVariable String employeeId,
             @PathVariable Long groupId) {
-        employeeService.assignGroupToEmployee(employeeId, groupId);
+        employeeService.assignGroupToEmployee(request.getHeader("authorization"),employeeId, groupId);
         return ResponseEntity.ok("group assigned successfully to employee");
     }
 
