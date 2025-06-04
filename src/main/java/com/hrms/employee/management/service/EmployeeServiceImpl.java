@@ -287,7 +287,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void grantAdminAccess(String token, String userId, String realmName,String groupId) {
         log.info("inside grantAdmin aceess with token :{}",token);
         String url = iamServiceBaseUrl + Constants.GRANT_ADMIN_ACCESS;
-        log.info("trying to get assign the group to the user in keycloak, with url :{}",url);
+        log.info("trying to get assign the group to the user in keycloak, with url :{} and the groupId is :{}",url,groupId);
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(url)
                 .queryParam("realmName", realmName)
