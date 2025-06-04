@@ -269,6 +269,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Tenant-Id", TenantContext.getCurrentTenant());
         // Add auth header if required
         // headers.set("Authorization", "Bearer YOUR_TOKEN");
 
