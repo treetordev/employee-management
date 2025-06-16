@@ -16,8 +16,8 @@ public class LeaveTransaction {
     @Column(name = "employee_id", nullable = false)
     private String employeeId;
 
-    @Column(name = "leave_type_id", nullable = false)
-    private String leaveTypeId;
+    // @Column(name = "leave_type_id", nullable = false)
+    // private String leaveTypeId;
 
     @Column(name = "leave_type_name", nullable = false)
     private String leaveTypeName;
@@ -27,19 +27,19 @@ public class LeaveTransaction {
     private LeaveTransactionType transactionType;
 
     @Column(name = "days", nullable = false)
-    private int days;
+    private double days;
 
-    @Column(name = "balance_before", nullable = false)
-    private int balanceBefore;
+    // @Column(name = "balance_before", nullable = false)
+    // private int balanceBefore;
 
-    @Column(name = "balance_after", nullable = false)
-    private int balanceAfter;
+    // @Column(name = "balance_after", nullable = false)
+    // private int balanceAfter;
 
-    @Column(name = "reason")
-    private String reason;
+    // @Column(name = "reason")
+    // private String reason;
 
-    @Column(name = "processed_by")
-    private String processedBy;
+    // @Column(name = "processed_by")
+    // private String processedBy;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

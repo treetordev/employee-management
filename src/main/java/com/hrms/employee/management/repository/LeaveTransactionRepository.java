@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface LeaveTransactionRepository extends JpaRepository<LeaveTransaction, Long> {
-    List<LeaveTransaction> findByEmployeeIdOrderByCreatedAtDesc(String employeeId);
-    List<LeaveTransaction> findByEmployeeIdAndLeaveTypeIdOrderByCreatedAtDesc(String employeeId, String leaveTypeId);
+    // List<LeaveTransaction> findByEmployeeIdOrderByCreatedAtDesc(String employeeId);
+    // List<LeaveTransaction> findByEmployeeIdAndLeaveTypeIdOrderByCreatedAtDesc(String employeeId, String leaveTypeId);
 }
