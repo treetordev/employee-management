@@ -78,10 +78,25 @@ public class LeaveBalanceController {
     //     return ResponseEntity.ok("Leave type deactivated successfully");
     // }
 
-    @PostMapping("/disburse-leave")
+    @PostMapping("/disburse-monthly-leave")
     public ResponseEntity<String> disburseLeave() {
         leaveDisbursalSchedulerService.disburseMonthlyLeave();
         return ResponseEntity.ok("Leave disbursed successfully");
+    }
+    @PostMapping("/disburse-yearly-leave")
+    public ResponseEntity<String> disburseYearlyLeave() {
+        leaveDisbursalSchedulerService.disburseYearlyLeave();
+        return ResponseEntity.ok("Yearly leave disbursed successfully");
+    }
+    @PostMapping("/disburse-quarterly-leave")
+    public ResponseEntity<String> disburseQuarterlyLeave() {
+        leaveDisbursalSchedulerService.disburseQuarterlyLeave();
+        return ResponseEntity.ok("Quarterly leave disbursed successfully");
+    }
+    @PostMapping("/disburse-half-yearly-leave")
+    public ResponseEntity<String> disburseHalfYearlyLeave() {
+        leaveDisbursalSchedulerService.disburseHalfYearlyLeave();
+        return ResponseEntity.ok("Half-yearly leave disbursed successfully");
     }
     
 }
