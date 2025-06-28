@@ -50,14 +50,14 @@ public class LeaveBalanceService {
                 .collect(Collectors.toList());
     }
 
-    public LeaveBalanceDto getEmployeeLeaveBalance(String employeeId, String leaveTypeId) {
-        int currentYear = Year.now().getValue();
-        EmployeeLeaveBalance balance = leaveBalanceRepository
-                .findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(employeeId, leaveTypeId, currentYear)
-                .orElseThrow(() -> new RuntimeException("Leave balance not found"));
+    // public LeaveBalanceDto getEmployeeLeaveBalance(String employeeId, String leaveTypeId) {
+    //     int currentYear = Year.now().getValue();
+    //     EmployeeLeaveBalance balance = leaveBalanceRepository
+    //             .findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(employeeId, leaveTypeId, currentYear)
+    //             .orElseThrow(() -> new RuntimeException("Leave balance not found"));
 
-        return mapToDto(balance);
-    }
+    //     return mapToDto(balance);
+    // }
 
     public void initializeLeaveBalanceForNewEmployee(String employeeId) {
 
@@ -85,65 +85,65 @@ public class LeaveBalanceService {
         }
     }
 
-    public void assignLeaveToEmployee(String employeeId, String leaveTypeId, int days, String reason) {
-        int currentYear = Year.now().getValue();
-        EmployeeLeaveBalance balance = leaveBalanceRepository
-                .findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(employeeId, leaveTypeId, currentYear)
-                .orElseThrow(() -> new RuntimeException("Leave balance not found"));
+    // public void assignLeaveToEmployee(String employeeId, String leaveTypeId, int days, String reason) {
+    //     int currentYear = Year.now().getValue();
+    //     EmployeeLeaveBalance balance = leaveBalanceRepository
+    //             .findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(employeeId, leaveTypeId, currentYear)
+    //             .orElseThrow(() -> new RuntimeException("Leave balance not found"));
 
-        int balanceBefore = balance.getRemainingDays();
-        balance.addDays(days);
-        leaveBalanceRepository.save(balance);
+    //     int balanceBefore = balance.getRemainingDays();
+    //     balance.addDays(days);
+    //     leaveBalanceRepository.save(balance);
 
-        createLeaveTransaction(employeeId, leaveTypeId, balance.getLeaveTypeName(),
-                LeaveTransactionType.CREDIT, days, balanceBefore, balance.getRemainingDays(), reason);
-    }
+    //     createLeaveTransaction(employeeId, leaveTypeId, balance.getLeaveTypeName(),
+    //             LeaveTransactionType.CREDIT, days, balanceBefore, balance.getRemainingDays(), reason);
+    // }
 
-    public void bulkAssignLeave(BulkLeaveAssignmentDto assignmentDto) {
-        List<Employee> employees = employeeRepository.findAll();
+    // public void bulkAssignLeave(BulkLeaveAssignmentDto assignmentDto) {
+    //     List<Employee> employees = employeeRepository.findAll();
 
-        for (Employee employee : employees) {
-            try {
-                assignLeaveToEmployee(employee.getEmployeeId(), assignmentDto.getLeaveTypeId(),
-                        assignmentDto.getDays(), assignmentDto.getReason());
-            } catch (Exception e) {
-                System.err.println("Failed to assign leave to employee " + employee.getEmployeeId() + ": " + e.getMessage());
-            }
-        }
-    }
+    //     for (Employee employee : employees) {
+    //         try {
+    //             assignLeaveToEmployee(employee.getEmployeeId(), assignmentDto.getLeaveTypeId(),
+    //                     assignmentDto.getDays(), assignmentDto.getReason());
+    //         } catch (Exception e) {
+    //             System.err.println("Failed to assign leave to employee " + employee.getEmployeeId() + ": " + e.getMessage());
+    //         }
+    //     }
+    // }
 
-    public void deductLeaveFromEmployee(String employeeId, LeaveDeductionDto deductionDto) {
-        int currentYear = Year.now().getValue();
-        EmployeeLeaveBalance balance = leaveBalanceRepository
-                .findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(employeeId, deductionDto.getLeaveTypeId(), currentYear)
-                .orElseThrow(() -> new RuntimeException("Leave balance not found"));
+//     public void deductLeaveFromEmployee(String employeeId, LeaveDeductionDto deductionDto) {
+//         int currentYear = Year.now().getValue();
+//         EmployeeLeaveBalance balance = leaveBalanceRepository
+//                 .findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(employeeId, deductionDto.getLeaveTypeId(), currentYear)
+//                 .orElseThrow(() -> new RuntimeException("Leave balance not found"));
 
-        int balanceBefore = balance.getRemainingDays();
-        balance.deductDays(deductionDto.getDays());
-        leaveBalanceRepository.save(balance);
+//         int balanceBefore = balance.getRemainingDays();
+//         // balance.deductDays(deductionDto.getDays());
+//         leaveBalanceRepository.save(balance);
 
-//check karna isko
-        createLeaveTransaction(employeeId, deductionDto.getLeaveTypeId(), balance.getLeaveTypeName(),
-                LeaveTransactionType.DEBIT, deductionDto.getDays(), balanceBefore, balance.getRemainingDays(), deductionDto.getReason());
-    }
+// //check karna isko
+//         createLeaveTransaction(employeeId, deductionDto.getLeaveTypeId(), balance.getLeaveTypeName(),
+//                 LeaveTransactionType.DEBIT, deductionDto.getDays(), balanceBefore, balance.getRemainingDays(), deductionDto.getReason());
+//     }
 
-    public void deactivateLeaveType(String leaveTypeId) {
-        List<EmployeeLeaveBalance> balances = leaveBalanceRepository.findByLeaveTypeIdAndIsActiveTrue(leaveTypeId);
+    // public void deactivateLeaveType(String leaveTypeId) {
+    //     List<EmployeeLeaveBalance> balances = leaveBalanceRepository.findByLeaveTypeIdAndIsActiveTrue(leaveTypeId);
 
-        for (EmployeeLeaveBalance balance : balances) {
-            balance.setActive(false);
-        }
+    //     for (EmployeeLeaveBalance balance : balances) {
+    //         balance.setActive(false);
+    //     }
 
-        leaveBalanceRepository.saveAll(balances);
-    }
+    //     leaveBalanceRepository.saveAll(balances);
+    // }
 
     private void createLeaveBalance(String employeeId, LeaveType leaveType, int year, String reason) {
         EmployeeLeaveBalance balance = new EmployeeLeaveBalance();
         balance.setEmployeeId(employeeId);
-        balance.setLeaveTypeId(leaveType.getId());
+        // balance.setLeaveTypeId(leaveType.getId());
         balance.setLeaveTypeName(leaveType.getName());
-        balance.setAllocatedDays(leaveType.getDefaultTotalDays());
-        balance.setUsedDays(0);
+        // balance.setAllocatedDays(leaveType.getDefaultTotalDays());
+        // balance.setUsedDays(0);
         balance.setCarryForwardDays(0);
         balance.setYear(year);
         balance.setActive(true);
@@ -158,26 +158,26 @@ public class LeaveBalanceService {
                                         LeaveTransactionType transactionType, int days, int balanceBefore, int balanceAfter, String reason) {
         LeaveTransaction transaction = new LeaveTransaction();
         transaction.setEmployeeId(employeeId);
-        transaction.setLeaveTypeId(leaveTypeId);
+        // transaction.setLeaveTypeId(leaveTypeId);
         transaction.setLeaveTypeName(leaveTypeName);
         transaction.setTransactionType(transactionType);
         transaction.setDays(days);
-        transaction.setBalanceBefore(balanceBefore);
-        transaction.setBalanceAfter(balanceAfter);
-        transaction.setReason(reason);
-        transaction.setProcessedBy("DAD");
+        // transaction.setBalanceBefore(balanceBefore);
+        // transaction.setBalanceAfter(balanceAfter);
+        // transaction.setReason(reason);
+        // transaction.setProcessedBy("DAD");
 
         leaveTransactionRepository.save(transaction);
     }
 
     private LeaveBalanceDto mapToDto(EmployeeLeaveBalance balance) {
         LeaveBalanceDto dto = new LeaveBalanceDto();
-        dto.setLeaveTypeId(balance.getLeaveTypeId());
+        // dto.setLeaveTypeId(balance.getLeaveTypeId());
         dto.setLeaveTypeName(balance.getLeaveTypeName());
-        dto.setAllocatedDays(balance.getAllocatedDays());
-        dto.setUsedDays(balance.getUsedDays());
+        // dto.setAllocatedDays(balance.getAllocatedDays());
+        // dto.setUsedDays(balance.getUsedDays());
         dto.setCarryForwardDays(balance.getCarryForwardDays());
-        dto.setRemainingDays(balance.getRemainingDays());
+        // dto.setRemainingDays(balance.getRemainingDays());
         dto.setYear(balance.getYear());
         return dto;
     }

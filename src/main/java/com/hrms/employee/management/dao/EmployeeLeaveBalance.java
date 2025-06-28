@@ -15,23 +15,23 @@ public class EmployeeLeaveBalance {
     @Column(name = "employee_id", nullable = false)
     private String employeeId;
 
-    @Column(name = "leave_type_id", nullable = false)
-    private String leaveTypeId;
+    // @Column(name = "leave_type_id", nullable = false)
+    // private String leaveTypeId;
 
     @Column(name = "leave_type_name", nullable = false)
     private String leaveTypeName;
 
-    @Column(name = "allocated_days", nullable = false)
-    private int allocatedDays;
+    @Column(name = "leave_balance", nullable = false)
+    private double leaveBalance;
 
-    @Column(name = "used_days", nullable = false)
-    private int usedDays;
+    // @Column(name = "used_days", nullable = false)
+    // private int usedDays;
 
     @Column(name = "carry_forward_days", nullable = false)
     private int carryForwardDays;
 
     @Column(name = "remaining_days", nullable = false)
-    private int remainingDays;
+    private double remainingDays;
 
     @Column(name = "year", nullable = false)
     private int year;
@@ -45,9 +45,9 @@ public class EmployeeLeaveBalance {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", insertable = false, updatable = false)
-    private Employee employee;
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "employee_id", insertable = false, updatable = false)
+    // private Employee employee;
 
     @PrePersist
     protected void onCreate() {
@@ -63,19 +63,12 @@ public class EmployeeLeaveBalance {
     }
 
     private void calculateRemainingDays() {
-        this.remainingDays = this.allocatedDays + this.carryForwardDays - this.usedDays;
+        this.remainingDays = this.leaveBalance + this.carryForwardDays ;
     }
 
     public void addDays(int days) {
-        this.allocatedDays += days;
+        this.leaveBalance += days;
         calculateRemainingDays();
     }
 
-    public void deductDays(int days) {
-        if (this.remainingDays < days) {
-            throw new IllegalArgumentException("Insufficient leave balance");
-        }
-        this.usedDays += days;
-        calculateRemainingDays();
-    }
 }

@@ -13,8 +13,8 @@ import java.util.Optional;
 public interface EmployeeLeaveBalanceRepository extends JpaRepository<EmployeeLeaveBalance, Long> {
     List<EmployeeLeaveBalance> findByEmployeeIdAndIsActiveTrue(String employeeId);
     List<EmployeeLeaveBalance> findByEmployeeIdAndYearAndIsActiveTrue(String employeeId, int year);
-    Optional<EmployeeLeaveBalance> findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(String employeeId, String leaveTypeId, int year);
-    List<EmployeeLeaveBalance> findByLeaveTypeIdAndIsActiveTrue(String leaveTypeId);
+    // Optional<EmployeeLeaveBalance> findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(String employeeId, String leaveTypeId, int year);
+    // List<EmployeeLeaveBalance> findByLeaveTypeIdAndIsActiveTrue(String leaveTypeId);
 
     @Query("SELECT elb FROM EmployeeLeaveBalance elb WHERE elb.year = :year AND elb.isActive = true")
     List<EmployeeLeaveBalance> findAllByYearAndIsActiveTrue(@Param("year") int year);
