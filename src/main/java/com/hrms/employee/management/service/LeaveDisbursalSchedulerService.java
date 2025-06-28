@@ -1,6 +1,7 @@
 package com.hrms.employee.management.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,7 +40,7 @@ public class LeaveDisbursalSchedulerService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Autowired  
+    @Autowired
     private EmployeeLeaveBalanceRepository leaveBalanceRepository;
 
     @Autowired
@@ -47,50 +48,69 @@ public class LeaveDisbursalSchedulerService {
 
     @Scheduled(cron = "0 0 0 1 * ?")
     public void disburseMonthlyLeave() {
-        LeaveDisbursalDto leaveDisbursal = restTemplate.getForObject(companyServiceBaseUrl + "/leave-types/monthly",
-                LeaveDisbursalDto.class);
-        if (leaveDisbursal == null) {
-            log.warn("No monthly leave type found. Skipping disbursal.");
-            System.out.println("No monthly leave type found. Skipping disbursal.");
+        LeaveDisbursalDto[] leaveDisbursals = restTemplate.getForObject(
+                companyServiceBaseUrl + "/leave-types/schedule/monthly",
+                LeaveDisbursalDto[].class);
+        if (leaveDisbursals.length == 0) {
+            log.warn("No quarterly leave types found. Skipping disbursal.");
+            return;
+        }
+        List<LeaveDisbursalDto> leaveDisbursal = Arrays.asList(leaveDisbursals);
+        for (LeaveDisbursalDto leave : leaveDisbursal) {
+            disburseLeave(DisbursalFrequency.MONTHLY, 12, leave);
         }
 
-        disburseLeave(DisbursalFrequency.MONTHLY, 12,leaveDisbursal);
     }
 
     @Scheduled(cron = "0 0 0 1 1 ?")
     public void disburseYearlyLeave() {
-        LeaveDisbursalDto leaveDisbursal = restTemplate.getForObject(companyServiceBaseUrl + "/leave-types/yearly",
-                LeaveDisbursalDto.class);
-        if (leaveDisbursal == null) {
-            log.warn("No monthly leave type found. Skipping disbursal.");
-            System.out.println("No monthly leave type found. Skipping disbursal.");
+        LeaveDisbursalDto[] leaveDisbursals = restTemplate.getForObject(
+                companyServiceBaseUrl + "/leave-types/schedule/yearly",
+                LeaveDisbursalDto[].class);
+
+        if (leaveDisbursals.length == 0) {
+            log.warn("No yearly leave types found. Skipping disbursal.");
+            return;
         }
 
-        disburseLeave(DisbursalFrequency.YEARLY, 1,leaveDisbursal);
+        List<LeaveDisbursalDto> leaveDisbursal = Arrays.asList(leaveDisbursals);
+        for (LeaveDisbursalDto leave : leaveDisbursal) {
+            disburseLeave(DisbursalFrequency.YEARLY, 1, leave);
+        }
+
     }
 
     @Scheduled(cron = "0 0 0 1 1,4,7,10 ?")
     public void disburseQuarterlyLeave() {
-        LeaveDisbursalDto leaveDisbursal = restTemplate.getForObject(companyServiceBaseUrl + "/leave-types/quarterly",
-                LeaveDisbursalDto.class);
-        if (leaveDisbursal == null) {
-            log.warn("No monthly leave type found. Skipping disbursal.");
-            System.out.println("No monthly leave type found. Skipping disbursal.");
+        LeaveDisbursalDto[] leaveDisbursals = restTemplate.getForObject(
+                companyServiceBaseUrl + "/leave-types/schedule/quarterly",
+                LeaveDisbursalDto[].class);
+        if (leaveDisbursals.length == 0) {
+            log.warn("No quarterly leave types found. Skipping disbursal.");
+            return;
+        }
+        List<LeaveDisbursalDto> leaveDisbursal = Arrays.asList(leaveDisbursals);
+        for (LeaveDisbursalDto leave : leaveDisbursal) {
+            disburseLeave(DisbursalFrequency.QUARTERLY, 4, leave);
         }
 
-        disburseLeave(DisbursalFrequency.QUARTERLY, 4,leaveDisbursal);
     }
 
     @Scheduled(cron = "0 0 0 1 1,7 ?")
     public void disburseHalfYearlyLeave() {
-        LeaveDisbursalDto leaveDisbursal = restTemplate.getForObject(companyServiceBaseUrl + "/leave-types/half-yearly",
-                LeaveDisbursalDto.class);
-        if (leaveDisbursal == null) {
-            log.warn("No monthly leave type found. Skipping disbursal.");
-            System.out.println("No monthly leave type found. Skipping disbursal.");
+        LeaveDisbursalDto[] leaveDisbursals = restTemplate.getForObject(
+                companyServiceBaseUrl + "/leave-types/schedule/half_yearly",
+                LeaveDisbursalDto[].class);
+        if (leaveDisbursals.length == 0) {
+            log.warn("No half-yearly leave types found. Skipping disbursal.");
+            return;
+        }
+        List<LeaveDisbursalDto> leaveDisbursal = Arrays.asList(leaveDisbursals);
+
+        for (LeaveDisbursalDto leave : leaveDisbursal) {
+            disburseLeave(DisbursalFrequency.HALF_YEARLY, 2, leave);
         }
 
-        disburseLeave(DisbursalFrequency.HALF_YEARLY, 2, leaveDisbursal);
     }
 
     @Transactional
@@ -99,6 +119,7 @@ public class LeaveDisbursalSchedulerService {
         List<Employee> employees = employeeRepository.findAll();
 
         double daysToDisburse = leaveDisbursal.getTotalDays() / (double) divisor;
+        daysToDisburse = Math.round(daysToDisburse * 100.0) / 100.0;
 
         List<EmployeeLeaveBalance> employeeLeaveBalances = leaveBalanceRepository.findAll();
         Map<String, EmployeeLeaveBalance> balanceMap = employeeLeaveBalances.stream()
