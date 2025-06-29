@@ -17,7 +17,7 @@ import com.hrms.employee.management.service.EmployeeService;
 @RequestMapping("/employee")
 @CrossOrigin(origins ="*")
 public class EmployeeController {
-	private final EmployeeService employeeService;
+    private final EmployeeService employeeService;
 
     public EmployeeController(EmployeeService employeeService) {
         this.employeeService = employeeService;
@@ -26,7 +26,7 @@ public class EmployeeController {
     @PostMapping
     public ResponseEntity<Employee> createEmployee(@RequestBody EmployeeDto employeeDto) {
         String userId=employeeService.onboardUserInKeycloak(employeeDto, TenantContext.getCurrentTenant());
-       // employeeDto.setKcReferenceId(userId);
+        // employeeDto.setKcReferenceId(userId);
         Employee createdEmployee = employeeService.createEmployee(employeeDto,userId);
         return ResponseEntity.ok(createdEmployee);
     }
@@ -55,7 +55,7 @@ public class EmployeeController {
         List<Employee> employees = employeeService.getAllEmployees();
         return ResponseEntity.ok(employees);
     }
-    
+
     @GetMapping("/counts")
     public ResponseEntity<EmployeeCountDto> getEmployeeCounts() {
         EmployeeCountDto employeeCounts = employeeService.getEmployeeCounts();
@@ -94,4 +94,24 @@ public class EmployeeController {
         Employee employee = employeeService.findEmployeesByKcRefId(kcRefId);
         return ResponseEntity.ok(employee);
     }
+
+    @PostMapping("{mangerEmpId}/Approve-leave/{employeeId}/{leaveRequestId}")
+    public ResponseEntity<String> approveLeave(
+            @PathVariable String employeeId,
+            @PathVariable String mangerEmpId,
+            @PathVariable Long leaveRequestId) {
+        employeeService.approveLeave(employeeId, mangerEmpId, leaveRequestId);
+        return ResponseEntity.ok("Leave approved successfully");
+    }
+
+    @PostMapping("{mangerEmpId}/Reject-leave/{employeeId}/{leaveRequestId}")
+    public ResponseEntity<String> rejectLeave(
+            @PathVariable String employeeId,
+            @PathVariable String mangerEmpId,
+            @PathVariable Long leaveRequestId) {
+        employeeService.rejectLeave(employeeId, mangerEmpId, leaveRequestId);
+        return ResponseEntity.ok("Leave rejected successfully");
+    }
+
+ 
 }

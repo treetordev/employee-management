@@ -16,6 +16,8 @@ public interface EmployeeLeaveBalanceRepository extends JpaRepository<EmployeeLe
     // Optional<EmployeeLeaveBalance> findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(String employeeId, String leaveTypeId, int year);
     // List<EmployeeLeaveBalance> findByLeaveTypeIdAndIsActiveTrue(String leaveTypeId);
 
+    Optional<EmployeeLeaveBalance> findByEmployeeIdAndLeaveTypeName(String employeeId,String leaveTypeName);
+
     @Query("SELECT elb FROM EmployeeLeaveBalance elb WHERE elb.year = :year AND elb.isActive = true")
     List<EmployeeLeaveBalance> findAllByYearAndIsActiveTrue(@Param("year") int year);
 }

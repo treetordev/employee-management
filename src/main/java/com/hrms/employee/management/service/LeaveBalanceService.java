@@ -112,20 +112,20 @@ public class LeaveBalanceService {
     //     }
     // }
 
-//     public void deductLeaveFromEmployee(String employeeId, LeaveDeductionDto deductionDto) {
-//         int currentYear = Year.now().getValue();
-//         EmployeeLeaveBalance balance = leaveBalanceRepository
-//                 .findByEmployeeIdAndLeaveTypeIdAndYearAndIsActiveTrue(employeeId, deductionDto.getLeaveTypeId(), currentYear)
-//                 .orElseThrow(() -> new RuntimeException("Leave balance not found"));
+    public void deductLeaveFromEmployee(String employeeId,String leaveType ,int days) {
+        EmployeeLeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndLeaveTypeName(employeeId,leaveType).get();
+        Double updateBalance = balance.getLeaveBalance() - days;
+        balance.setLeaveBalance(updateBalance); 
+        balance.setRemainingDays(updateBalance);
+        leaveBalanceRepository.save(balance);
 
-//         int balanceBefore = balance.getRemainingDays();
-//         // balance.deductDays(deductionDto.getDays());
-//         leaveBalanceRepository.save(balance);
-
-// //check karna isko
-//         createLeaveTransaction(employeeId, deductionDto.getLeaveTypeId(), balance.getLeaveTypeName(),
-//                 LeaveTransactionType.DEBIT, deductionDto.getDays(), balanceBefore, balance.getRemainingDays(), deductionDto.getReason());
-//     }
+        LeaveTransaction transaction = new LeaveTransaction();
+        transaction.setEmployeeId(employeeId);
+        transaction.setLeaveTypeName(balance.getLeaveTypeName());
+        transaction.setTransactionType(LeaveTransactionType.DEBIT);
+        transaction.setDays(days);
+        leaveTransactionRepository.save(transaction);
+    }
 
     // public void deactivateLeaveType(String leaveTypeId) {
     //     List<EmployeeLeaveBalance> balances = leaveBalanceRepository.findByLeaveTypeIdAndIsActiveTrue(leaveTypeId);

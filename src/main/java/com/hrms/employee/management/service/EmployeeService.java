@@ -27,4 +27,6 @@ public interface EmployeeService {
 
     Employee findEmployeesByKcRefId(String kcRefId);
     EmployeeReportResponse getEmployeeReportById(String employeeId,int month,int year);
+    void approveLeave(String employeeId, String mangerEmpId, Long leaveRequestId);
+    void rejectLeave(String employeeId, String mangerEmpId, Long leaveRequestId);
 }
