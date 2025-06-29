@@ -20,7 +20,7 @@ import com.hrms.employee.management.dto.LeaveDisbursalDto;
 import com.hrms.employee.management.repository.EmployeeLeaveBalanceRepository;
 import com.hrms.employee.management.repository.EmployeeRepository;
 import com.hrms.employee.management.repository.LeaveTransactionRepository;
-import com.hrms.employee.management.utility.DisbursalFrequency;
+import com.hrms.employee.management.utility.EmployeeLeaveKey;
 import com.hrms.employee.management.utility.LeaveTransactionType;
 
 import jakarta.transaction.Transactional;
@@ -57,7 +57,7 @@ public class LeaveDisbursalSchedulerService {
         }
         List<LeaveDisbursalDto> leaveDisbursal = Arrays.asList(leaveDisbursals);
         for (LeaveDisbursalDto leave : leaveDisbursal) {
-            disburseLeave(DisbursalFrequency.MONTHLY, 12, leave);
+            disburseLeave(leave.getName(), 12, leave);
         }
 
     }
@@ -75,7 +75,7 @@ public class LeaveDisbursalSchedulerService {
 
         List<LeaveDisbursalDto> leaveDisbursal = Arrays.asList(leaveDisbursals);
         for (LeaveDisbursalDto leave : leaveDisbursal) {
-            disburseLeave(DisbursalFrequency.YEARLY, 1, leave);
+            disburseLeave(leave.getName(), 1, leave);
         }
 
     }
@@ -91,7 +91,7 @@ public class LeaveDisbursalSchedulerService {
         }
         List<LeaveDisbursalDto> leaveDisbursal = Arrays.asList(leaveDisbursals);
         for (LeaveDisbursalDto leave : leaveDisbursal) {
-            disburseLeave(DisbursalFrequency.QUARTERLY, 4, leave);
+            disburseLeave(leave.getName(), 4, leave);
         }
 
     }
@@ -108,34 +108,41 @@ public class LeaveDisbursalSchedulerService {
         List<LeaveDisbursalDto> leaveDisbursal = Arrays.asList(leaveDisbursals);
 
         for (LeaveDisbursalDto leave : leaveDisbursal) {
-            disburseLeave(DisbursalFrequency.HALF_YEARLY, 2, leave);
+            disburseLeave(leave.getName(), 2, leave);
         }
 
     }
 
     @Transactional
-    public void disburseLeave(DisbursalFrequency frequency, int divisor, LeaveDisbursalDto leaveDisbursal) {
+    public void disburseLeave(String leaveName, int divisor, LeaveDisbursalDto leaveDisbursal) {
 
         List<Employee> employees = employeeRepository.findAll();
+        
 
         double daysToDisburse = leaveDisbursal.getTotalDays() / (double) divisor;
         daysToDisburse = Math.round(daysToDisburse * 100.0) / 100.0;
 
         List<EmployeeLeaveBalance> employeeLeaveBalances = leaveBalanceRepository.findAll();
-        Map<String, EmployeeLeaveBalance> balanceMap = employeeLeaveBalances.stream()
-                .collect(Collectors.toMap(EmployeeLeaveBalance::getEmployeeId, b -> b));
+
+        Map<EmployeeLeaveKey, EmployeeLeaveBalance> leaveBalanceMap = employeeLeaveBalances.stream()
+                .filter(e->e.getLeaveTypeName().equals(leaveName))
+                .collect(Collectors.toMap(
+                        emp -> new EmployeeLeaveKey(emp.getEmployeeId(), leaveName),
+                        emp -> emp));
 
         List<LeaveTransaction> leaveTransactions = new ArrayList<>();
         List<EmployeeLeaveBalance> updatedLeaveBalances = new ArrayList<>();
-
+        int currentYear = java.time.Year.now().getValue();
         for (Employee employee : employees) {
-            EmployeeLeaveBalance balance = balanceMap.get(employee.getEmployeeId());
+            EmployeeLeaveKey employeeLeaveKey = new EmployeeLeaveKey(employee.getEmployeeId(), leaveName);
+            EmployeeLeaveBalance balance = leaveBalanceMap.get(employeeLeaveKey);
 
             if (balance == null) {
                 balance = new EmployeeLeaveBalance();
                 balance.setEmployeeId(employee.getEmployeeId());
-                balance.setLeaveTypeName(frequency.toString());
+                balance.setLeaveTypeName(leaveName);
                 balance.setLeaveBalance(0);
+                balance.setYear(currentYear);
             }
 
             balance.setLeaveBalance(balance.getLeaveBalance() + daysToDisburse);
@@ -143,7 +150,7 @@ public class LeaveDisbursalSchedulerService {
 
             LeaveTransaction transaction = new LeaveTransaction();
             transaction.setEmployeeId(employee.getEmployeeId());
-            transaction.setLeaveTypeName(frequency.toString());
+            transaction.setLeaveTypeName(leaveName);
             transaction.setTransactionType(LeaveTransactionType.CREDIT);
             transaction.setDays(daysToDisburse);
             leaveTransactions.add(transaction);
