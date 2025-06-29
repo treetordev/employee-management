@@ -19,12 +19,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.hrms.employee.management.dao.Employee;
 import com.hrms.employee.management.dao.LeaveTracker;
 import com.hrms.employee.management.dao.Timesheet;
+import com.hrms.employee.management.dto.EmployeeCountDto;
+import com.hrms.employee.management.dto.EmployeeDto;
+import com.hrms.employee.management.dto.EmployeeReportResponse;
 import com.hrms.employee.management.dto.GenerateTokenRequest;
+import com.hrms.employee.management.dto.LeaveTrackerDto;
 import com.hrms.employee.management.dto.OnboardKeycloakUserRequest;
+import com.hrms.employee.management.dto.RoleGroupExtResponse;
+import com.hrms.employee.management.dto.SummaryDto;
+import com.hrms.employee.management.dto.TimesheetDto;
+import com.hrms.employee.management.dto.WorkDaysDto;
 import com.hrms.employee.management.repository.EmployeeRepository;
 import com.hrms.employee.management.repository.LeaveTrackerRepository;
 import com.hrms.employee.management.repository.TimesheetRepository;
@@ -390,6 +399,50 @@ public class EmployeeServiceImpl implements EmployeeService {
                         .orElse(null);
         
         return leaveTrackerMapper.convertToDto(leave);
+    }
+
+    @Override
+    public void approveLeave(String employeeId, String mangerEmpId, Long leaveRequestId) {
+        LeaveTracker leaveTracker = leaveTrackerRepository.findById(leaveRequestId)
+                .orElseThrow(() -> new RuntimeException("Leave request not found"));
+
+        if (!leaveTracker.getEmployee().getEmployeeId().equals(employeeId)) {
+            throw new RuntimeException("Leave request does not belong to the specified employee");
+        }
+
+        if (!leaveTracker.getStatus().equals("PENDING")) {
+            throw new RuntimeException("Leave request is not in PENDING status");
+        }
+
+        leaveTracker.setStatus("APPROVED");
+        leaveTracker.setReason("Approved by manager: ");
+
+        int leaveDays = leaveTracker.getEndDate().getDayOfYear() - leaveTracker.getStartDate().getDayOfYear() + 1;
+        leaveBalanceService.deductLeaveFromEmployee(employeeId, leaveTracker.getLeaveType(), leaveDays);
+        leaveTrackerRepository.save(leaveTracker);
+
+        leaveBalanceService.deductLeaveFromEmployee(employeeId, leaveTracker.getLeaveType(), leaveDays);
+        
+    }
+
+    @Override
+    public void rejectLeave(String employeeId, String mangerEmpId, Long leaveRequestId) {
+        LeaveTracker leaveTracker = leaveTrackerRepository.findById(leaveRequestId)
+                .orElseThrow(() -> new RuntimeException("Leave request not found"));
+
+        if (!leaveTracker.getEmployee().getEmployeeId().equals(employeeId)) {
+            throw new RuntimeException("Leave request does not belong to the specified employee");
+        }
+
+        if (!leaveTracker.getStatus().equals("PENDING")) {
+            throw new RuntimeException("Leave request is not in PENDING status");
+        }
+
+        leaveTracker.setStatus("REJECTED");
+        leaveTracker.setReason("Rejected by manager: ");
+
+        leaveTrackerRepository.save(leaveTracker);
+       
     }
 
 }
