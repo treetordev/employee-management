@@ -65,12 +65,12 @@ public class LeaveBalanceController {
     //     return ResponseEntity.ok("Leave assigned to all employees successfully");
     // }
 
-    // @PostMapping("/deduct/{employeeId}")
-    // public ResponseEntity<String> deductLeaveFromEmployee(@PathVariable String employeeId,
-    //                                                       @Valid @RequestBody LeaveDeductionDto deductionDto) {
-    //     leaveBalanceService.deductLeaveFromEmployee(employeeId, deductionDto);
-    //     return ResponseEntity.ok("Leave deducted successfully");
-    // }
+    @PostMapping("/deduct/{employeeId}")
+    public ResponseEntity<String> deductLeaveFromEmployee(@PathVariable String employeeId,
+                                                          @Valid @RequestBody LeaveDeductionDto deductionDto) {
+        leaveBalanceService.deductLeaveFromEmployee(employeeId, deductionDto);
+        return ResponseEntity.ok("Leave deducted successfully");
+    }
 
     // @PutMapping("/deactivate-leave-type/{leaveTypeId}")
     // public ResponseEntity<String> deactivateLeaveType(@PathVariable String leaveTypeId) {
