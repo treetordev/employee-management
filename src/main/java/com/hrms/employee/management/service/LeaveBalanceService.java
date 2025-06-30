@@ -2,11 +2,13 @@ package com.hrms.employee.management.service;
 
 import com.hrms.employee.management.dao.Employee;
 import com.hrms.employee.management.dao.EmployeeLeaveBalance;
+import com.hrms.employee.management.dao.LeaveTracker;
 import com.hrms.employee.management.dao.LeaveTransaction;
 import com.hrms.employee.management.dto.BulkLeaveAssignmentDto;
 import com.hrms.employee.management.dto.LeaveBalanceDto;
 import com.hrms.employee.management.dto.LeaveDeductionDto;
 import com.hrms.employee.management.repository.EmployeeRepository;
+import com.hrms.employee.management.repository.LeaveTrackerRepository;
 import com.hrms.employee.management.repository.EmployeeLeaveBalanceRepository;
 import com.hrms.employee.management.repository.LeaveTransactionRepository;
 import com.hrms.employee.management.utility.LeaveTransactionType;
@@ -24,6 +26,10 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class LeaveBalanceService {
+
+
+    @Autowired
+    private LeaveTrackerRepository leaveTrackerRepository;
 
     @Autowired
     private EmployeeLeaveBalanceRepository leaveBalanceRepository;
@@ -112,9 +118,12 @@ public class LeaveBalanceService {
     //     }
     // }
 
-    public void deductLeaveFromEmployee(String employeeId,LeaveDeductionDto leaveDto) {
-        EmployeeLeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndLeaveTypeName(employeeId,leaveDto.getLeaveType()).get();
-        Double updateBalance = balance.getLeaveBalance() - leaveDto.getDays();
+    public void deductLeaveFromEmployee(String employeeId,Long leaveId) {
+        
+        LeaveTracker leaveTracker=leaveTrackerRepository.findById(leaveId).orElseThrow(() -> new RuntimeException("Leave not found"));
+        EmployeeLeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndLeaveTypeName(employeeId,leaveTracker.getLeaveType()).get();
+        int days = leaveTracker.getEndDate().getDayOfYear() - leaveTracker.getStartDate().getDayOfYear() + 1;
+        Double updateBalance = balance.getLeaveBalance() - days;
         balance.setLeaveBalance(updateBalance); 
         balance.setRemainingDays(updateBalance);
         leaveBalanceRepository.save(balance);
@@ -123,7 +132,7 @@ public class LeaveBalanceService {
         transaction.setEmployeeId(employeeId);
         transaction.setLeaveTypeName(balance.getLeaveTypeName());
         transaction.setTransactionType(LeaveTransactionType.DEBIT);
-        transaction.setDays(leaveDto.getDays());
+        transaction.setDays(days);
         leaveTransactionRepository.save(transaction);
     }
 

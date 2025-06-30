@@ -14,7 +14,7 @@ public class WFHBalanceController {
     @Autowired
     private WfhBalanceService wfhBalanceService;
 
-    @PostMapping("/deduct")
+    @PostMapping("/{employeeId}/deduct/{wfhTrackerId}")
     public void deductWfhBalance(Long employeeId, Long wfhTrackerId) {
         wfhBalanceService.deductWfhBalance(employeeId, wfhTrackerId);
     }

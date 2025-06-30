@@ -65,10 +65,10 @@ public class LeaveBalanceController {
     //     return ResponseEntity.ok("Leave assigned to all employees successfully");
     // }
 
-    @PostMapping("/deduct/{employeeId}")
+    @PostMapping("/{employeeId}/deduct/{leaveId}")
     public ResponseEntity<String> deductLeaveFromEmployee(@PathVariable String employeeId,
-                                                          @Valid @RequestBody LeaveDeductionDto deductionDto) {
-        leaveBalanceService.deductLeaveFromEmployee(employeeId, deductionDto);
+                                                          @PathVariable Long leaveId) {
+        leaveBalanceService.deductLeaveFromEmployee(employeeId, leaveId);
         return ResponseEntity.ok("Leave deducted successfully");
     }
 
