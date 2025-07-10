@@ -181,12 +181,10 @@ public class LeaveBalanceService {
 
     private LeaveBalanceDto mapToDto(EmployeeLeaveBalance balance) {
         LeaveBalanceDto dto = new LeaveBalanceDto();
-        // dto.setLeaveTypeId(balance.getLeaveTypeId());
         dto.setLeaveTypeName(balance.getLeaveTypeName());
-        // dto.setAllocatedDays(balance.getAllocatedDays());
-        // dto.setUsedDays(balance.getUsedDays());
+        dto.setLeaveBalance(balance.getLeaveBalance());
         dto.setCarryForwardDays(balance.getCarryForwardDays());
-        // dto.setRemainingDays(balance.getRemainingDays());
+        dto.setRemainingDays(balance.getRemainingDays());
         dto.setYear(balance.getYear());
         return dto;
     }
